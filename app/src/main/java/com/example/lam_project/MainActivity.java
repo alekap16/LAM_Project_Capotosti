@@ -35,7 +35,9 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
 
-        // Initialize osmdroid configuration (needed for caching, etc.)
+
+        // Initialize osmdroid for caching and stuff
+        //I should wrap this into a class but to lazy will do at the end of project
         String osmCachePath = getFilesDir().getAbsolutePath() + "/osmdroid";
         Configuration.getInstance().load(getApplicationContext(),
         androidx.preference.PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
@@ -50,16 +52,11 @@ public class MainActivity extends Activity {
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     LOCATION_PERMISSION_REQUEST_CODE);
         } else {
-            // If the permission is granted, start getting the location
+            // when permission OK perform updates, this solves the control issue I tought about
             startLocationUpdates();
         }
 
-
-        // Initialize osmdroid configuration (needed for caching, etc.)
-
-        //handle permissions first, before map is created. not depicted here
-
-        //load/initialize the osmdroid configuration, this can be done
+        //Osmdroid stuff getting API
         Context ctx = getApplicationContext();
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
         //setting this before the layout is inflated is a good idea
@@ -71,16 +68,20 @@ public class MainActivity extends Activity {
         //inflate and create the map
         setContentView(R.layout.activity_main);
 
+        // what is this it's not accomplish anything can't truly bound the map by default
+        //or am i stupid that cant figure it out why but keeping this commented as for now
         /*BoundingBox italyBoundingBox = new BoundingBox(35.5, 6.5, 47.1, 18.8);
         map.zoomToBoundingBox(italyBoundingBox, false);*/
         //map.setBuiltInZoomControls(false);
         //IMapController mapController = map.getController();
 
         map = (MapView) findViewById(R.id.map);
+
         map.setTileSource(TileSourceFactory.MAPNIK);
 
         map.setClickable(false);
         map.setMultiTouchControls(false);
+
         startLocationUpdates();
 
         /*
@@ -106,8 +107,9 @@ public class MainActivity extends Activity {
                     GeoPoint startPoint = new GeoPoint(latitude, longitude);
                     // Use the GeoPoint as the fixed center of the map
                     map.getController().setCenter(startPoint);
-                    // Set the desired fixed zoom level (e.g., 12.0)
-                    mapController.setZoom(21.0);
+                    // Set zoom
+                    mapController.setZoom(22.0);
+                    GridCreator.createGridOverlay(map, latitude, longitude);
 
                 }
                 /*
@@ -141,9 +143,7 @@ public class MainActivity extends Activity {
             return;
         }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                1000, // Minimum time interval between updates (e.g., 1000ms = 1 second)
-                10,   // Minimum distance between updates (e.g., 10 meters)
-                locationListener);
+                1000, 10, locationListener);
     }
 
     public void onResume(){
@@ -152,7 +152,7 @@ public class MainActivity extends Activity {
         //if you make changes to the configuration, use
         //SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         //Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this));
-        map.onResume(); //needed for compass, my location overlays, v6.0.0 and up
+        map.onResume();
     }
 
     public void onPause(){
@@ -161,6 +161,6 @@ public class MainActivity extends Activity {
         //if you make changes to the configuration, use
         //SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         //Configuration.getInstance().save(this, prefs);
-        map.onPause();  //needed for compass, my location overlays, v6.0.0 and up
+        map.onPause();
     }
 }

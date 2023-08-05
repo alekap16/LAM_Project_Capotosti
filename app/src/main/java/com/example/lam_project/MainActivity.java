@@ -101,7 +101,11 @@ public class MainActivity extends Activity {
         mapController.setCenter(startPoint);*/
 
     }
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        signalStrengthManager.stopSignalStrengthUpdates();
+    }
     private void startLocationUpdates() {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 

@@ -22,7 +22,7 @@ import java.util.Set;
 //at first look easy to complete for other use cases
 public class GridCreator {
 
-    private static int currentLTESignalStrength = 1000; // Variable to store the current LTE signal strength
+    private static int currentLTESignalStrength = 0; // Variable to store the current LTE signal strength
 
     // Size of the squares in meters
     private static final double SQUARE_SIZE_METERS = 10.0;
@@ -67,9 +67,11 @@ public class GridCreator {
                 public void onSignalStrengthChanged(int signalStrength) {
                     // Store the current LTE signal strength
                     currentLTESignalStrength = signalStrength;
-                    Log.d("SignalStrength", "LTE Signal Strength: " + signalStrength);
+
+                    //Log.d("SignalStrength", "LTE Signal Strength: " + signalStrength);
                     // Paint the square based on the current LTE signal strength
                     LTESignalPainter.paintSquareByLTESignalStrength(mapView, square, currentLTESignalStrength);
+                    signalStrengthManager.stopSignalStrengthUpdates();
                 }
             });
             existingSquares.add(square);

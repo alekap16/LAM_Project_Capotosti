@@ -2,6 +2,9 @@ package com.example.lam_project;
 
 
 import android.graphics.Color;
+import android.util.Log;
+
+import com.example.lam_project.managers.SignalStrengthManager;
 
 import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
@@ -19,12 +22,16 @@ import java.util.Set;
 //at first look easy to complete for other use cases
 public class GridCreator {
 
+    private static int currentLTESignalStrength = 1000; // Variable to store the current LTE signal strength
+
     // Size of the squares in meters
     private static final double SQUARE_SIZE_METERS = 10.0;
 
     //Create each unique ID for squares, needs for overlap prevention
     private static final List<Polygon> existingSquares = new ArrayList<>();
-
+    public GridCreator() {
+        // No need for any constructor parameters in this case
+    }
     // Method to create and display the grid overlay
     public static void createGridOverlay(MapView mapView, double latitude, double longitude) {
         if (mapView == null)
@@ -53,7 +60,18 @@ public class GridCreator {
             square.setStrokeColor(Color.RED);
             square.setStrokeWidth(4f);
             mapView.getOverlayManager().add(square);
-
+            // Store the current LTE signal strength from SignalStrengthManager
+            SignalStrengthManager signalStrengthManager = new SignalStrengthManager(mapView.getContext());
+            signalStrengthManager.requestSignalStrengthUpdates(new SignalStrengthManager.OnSignalStrengthChangeListener() {
+                @Override
+                public void onSignalStrengthChanged(int signalStrength) {
+                    // Store the current LTE signal strength
+                    currentLTESignalStrength = signalStrength;
+                    Log.d("SignalStrength", "LTE Signal Strength: " + signalStrength);
+                    // Paint the square based on the current LTE signal strength
+                    LTESignalPainter.paintSquareByLTESignalStrength(mapView, square, currentLTESignalStrength);
+                }
+            });
             existingSquares.add(square);
             mapView.invalidate();
         }

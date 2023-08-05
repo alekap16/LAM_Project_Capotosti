@@ -9,9 +9,12 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import com.example.lam_project.managers.SignalStrengthManager;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
@@ -30,14 +33,20 @@ public class MainActivity extends Activity {
     private double latitude;
     private double longitude;
     private boolean isCameraFixed = true;
+    private SignalStrengthManager signalStrengthManager;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        signalStrengthManager = new SignalStrengthManager(this);
 
-
-        // Initialize osmdroid for caching and stuff
-        //I should wrap this into a class but to lazy will do at the end of project
+        signalStrengthManager.requestSignalStrengthUpdates(new SignalStrengthManager.OnSignalStrengthChangeListener() {
+            @Override
+            public void onSignalStrengthChanged(int signalStrength) {
+               // Log.d("SignalStrength", "LTE Signal Strength: " + signalStrength);
+            }
+        });
+        // Initialize osmdroid configuration (needed for caching, etc.)
         String osmCachePath = getFilesDir().getAbsolutePath() + "/osmdroid";
         Configuration.getInstance().load(getApplicationContext(),
         androidx.preference.PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
@@ -52,11 +61,16 @@ public class MainActivity extends Activity {
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     LOCATION_PERMISSION_REQUEST_CODE);
         } else {
-            // when permission OK perform updates, this solves the control issue I tought about
+            // If the permission is granted, start getting the location
             startLocationUpdates();
         }
 
-        //Osmdroid stuff getting API
+
+        // Initialize osmdroid configuration (needed for caching, etc.)
+
+        //handle permissions first, before map is created. not depicted here
+
+        //load/initialize the osmdroid configuration, this can be done
         Context ctx = getApplicationContext();
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
         //setting this before the layout is inflated is a good idea
@@ -68,8 +82,6 @@ public class MainActivity extends Activity {
         //inflate and create the map
         setContentView(R.layout.activity_main);
 
-        // what is this it's not accomplish anything can't truly bound the map by default
-        //or am i stupid that cant figure it out why but keeping this commented as for now
         /*BoundingBox italyBoundingBox = new BoundingBox(35.5, 6.5, 47.1, 18.8);
         map.zoomToBoundingBox(italyBoundingBox, false);*/
         //map.setBuiltInZoomControls(false);
@@ -107,8 +119,8 @@ public class MainActivity extends Activity {
                     GeoPoint startPoint = new GeoPoint(latitude, longitude);
                     // Use the GeoPoint as the fixed center of the map
                     map.getController().setCenter(startPoint);
-                    // Set zoom
-                    mapController.setZoom(22.0);
+                    // Set the desired fixed zoom level (e.g., 12.0)
+                    mapController.setZoom(21.0);
                     GridCreator.createGridOverlay(map, latitude, longitude);
 
                 }
@@ -143,7 +155,9 @@ public class MainActivity extends Activity {
             return;
         }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                1000, 10, locationListener);
+                1000, // Minimum time interval between updates (e.g., 1000ms = 1 second)
+                10,   // Minimum distance between updates (e.g., 10 meters)
+                locationListener);
     }
 
     public void onResume(){
@@ -152,7 +166,7 @@ public class MainActivity extends Activity {
         //if you make changes to the configuration, use
         //SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         //Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this));
-        map.onResume();
+        map.onResume(); //needed for compass, my location overlays, v6.0.0 and up
     }
 
     public void onPause(){
@@ -161,6 +175,6 @@ public class MainActivity extends Activity {
         //if you make changes to the configuration, use
         //SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         //Configuration.getInstance().save(this, prefs);
-        map.onPause();
+        map.onPause();  //needed for compass, my location overlays, v6.0.0 and up
     }
 }

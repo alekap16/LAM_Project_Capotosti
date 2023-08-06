@@ -33,14 +33,14 @@ public class GridCreator {
         // No need for any constructor parameters in this case
     }
     // Method to create and display the grid overlay
-    public static void createGridOverlay(MapView mapView, double latitude, double longitude) {
+    public static void createGridOverlay(MapView mapView, double latitude, double longitude, double squareSizeMeters) {
         if (mapView == null)
             return;
 
 
-        if (!doesSquareOverlap(latitude, longitude)) {
-            double latitudeDiff = metersToLatitude(SQUARE_SIZE_METERS);
-            double longitudeDiff = metersToLongitude(SQUARE_SIZE_METERS, latitude);
+        if (!doesSquareOverlap(latitude, longitude, squareSizeMeters)) {
+            double latitudeDiff = metersToLatitude(squareSizeMeters);
+            double longitudeDiff = metersToLongitude(squareSizeMeters, latitude);
 
             // Calculate the area of the square grid
             double latStart = latitude - 0.5 * latitudeDiff;
@@ -84,14 +84,15 @@ public class GridCreator {
         return distance / 111000.0;
     }
 
-    // Helper method to calculate the longitude difference for a given distance in meters at specific latitudes
+    // Helper method to calculate the longitude difference for a given distance in
+    // meters at specific latitudes
     private static double metersToLongitude(double distance, double latitude) {
         double metersPerLongitudeDegree = 111320.0 * Math.cos(Math.toRadians(latitude));
         return distance / metersPerLongitudeDegree;
     }
 
     // Helper method that chjecks if overlaps are a thing
-    private static boolean doesSquareOverlap(double latitude, double longitude) {
+    private static boolean doesSquareOverlap(double latitude, double longitude, double squareSizeMeters) {
         for (Polygon square : existingSquares) {
             List<GeoPoint> points = square.getPoints();
             double latStart = points.get(0).getLatitude();
@@ -100,8 +101,8 @@ public class GridCreator {
             double lonEnd = points.get(2).getLongitude();
 
             // Check if coordinates collides with the squares already painted for overlaps
-            for (double lat = latitude - 0.5 * metersToLatitude(SQUARE_SIZE_METERS); lat <= latitude + 0.5 * metersToLatitude(SQUARE_SIZE_METERS); lat += 0.1 * metersToLatitude(SQUARE_SIZE_METERS)) {
-                for (double lon = longitude - 0.5 * metersToLongitude(SQUARE_SIZE_METERS, latitude); lon <= longitude + 0.5 * metersToLongitude(SQUARE_SIZE_METERS, latitude); lon += 0.1 * metersToLongitude(SQUARE_SIZE_METERS, latitude)) {
+            for (double lat = latitude - 0.5 * metersToLatitude(squareSizeMeters); lat <= latitude + 0.5 * metersToLatitude(squareSizeMeters); lat += 0.1 * metersToLatitude(squareSizeMeters)) {
+                for (double lon = longitude - 0.5 * metersToLongitude(squareSizeMeters, latitude); lon <= longitude + 0.5 * metersToLongitude(squareSizeMeters, latitude); lon += 0.1 * metersToLongitude(squareSizeMeters, latitude)) {
                     if (lat >= latStart && lat <= latEnd && lon >= lonStart && lon <= lonEnd) {
                         return true; //overlap so don't print
                     }

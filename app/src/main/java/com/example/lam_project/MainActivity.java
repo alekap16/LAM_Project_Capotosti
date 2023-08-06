@@ -28,7 +28,7 @@ import java.io.File;
 
 public class MainActivity extends Activity {
     MapView map = null;
-
+    private static double squareSizeMeters = 1000.0;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private double latitude;
     private double longitude;
@@ -125,7 +125,7 @@ public class MainActivity extends Activity {
                     map.getController().setCenter(startPoint);
                     // Set the desired fixed zoom level (e.g., 12.0)
                     mapController.setZoom(21.0);
-                    GridCreator.createGridOverlay(map, latitude, longitude);
+                    GridCreator.createGridOverlay(map, latitude, longitude, squareSizeMeters);
 
                 }
                 /*

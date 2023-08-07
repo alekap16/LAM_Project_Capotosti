@@ -1,9 +1,14 @@
 package com.example.lam_project;
 
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.Path;
 
 import com.example.lam_project.graphics.DiagonalPatternPolygon;
+import com.example.lam_project.managers.DatabaseManager;
+import com.example.lam_project.model.Square;
 
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Polygon;
@@ -55,5 +60,32 @@ public class LTESignalPainter {
 
         map.getOverlayManager().add(diagonalPatternSquare);
         map.invalidate();
+        // Save the square into the database
+        saveSquareToDatabase(square, color, "LTE", map);
+    }
+
+    private static void saveSquareToDatabase(Polygon square, int color, String type, MapView map) {
+        // Get the latitude and longitude of the square
+        double latitude = square.getPoints().get(0).getLatitude();
+        double longitude = square.getPoints().get(0).getLongitude();
+
+        // Create a new Square object
+        Square squareObject = new Square(latitude, longitude, color, type);
+
+        // Get a reference to the database helper
+        Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
+        DatabaseManager dbHelper = new DatabaseManager(context);
+
+        // Insert the square into the database
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(DatabaseManager.COLUMN_LATITUDE, squareObject.getLatitude());
+        values.put(DatabaseManager.COLUMN_LONGITUDE, squareObject.getLongitude());
+        values.put(DatabaseManager.COLUMN_COLOR, squareObject.getColor());
+        values.put(DatabaseManager.COLUMN_TYPE, squareObject.getType());
+        long id = db.insert(DatabaseManager.TABLE_NAME, null, values);
+
+        // Set the ID of the square object after insertion
+        squareObject.setId(id);
     }
 }

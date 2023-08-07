@@ -24,8 +24,6 @@ public class GridCreator {
 
     private static int currentLTESignalStrength = 0; // Variable to store the current LTE signal strength
 
-    // Size of the squares in meters
-    private static final double SQUARE_SIZE_METERS = 10.0;
 
     //Create each unique ID for squares, needs for overlap prevention
     private static final List<Polygon> existingSquares = new ArrayList<>();

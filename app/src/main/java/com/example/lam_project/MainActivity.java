@@ -4,6 +4,8 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -14,6 +16,7 @@ import android.util.Log;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.example.lam_project.managers.DatabaseManager;
 import com.example.lam_project.managers.SignalStrengthManager;
 
 import org.osmdroid.api.IMapController;
@@ -28,12 +31,55 @@ import java.io.File;
 
 public class MainActivity extends Activity {
     MapView map = null;
-    private static double squareSizeMeters = 1000.0;
+    private static double squareSizeMeters = 10.0;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private double latitude;
     private double longitude;
     private boolean isCameraFixed = true;
     private SignalStrengthManager signalStrengthManager;
+
+    public void printDatabaseValues() {
+        // Get a reference to the database helper
+        Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
+        DatabaseManager dbHelper = new DatabaseManager(context);
+
+        // Read the data from the database
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String[] projection = {
+                DatabaseManager.COLUMN_ID,
+                DatabaseManager.COLUMN_LATITUDE,
+                DatabaseManager.COLUMN_LONGITUDE,
+                DatabaseManager.COLUMN_COLOR,
+                DatabaseManager.COLUMN_TYPE
+        };
+
+        Cursor cursor = db.query(
+                DatabaseManager.TABLE_NAME,
+                projection,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        // Loop through the cursor to log the data
+        if (cursor != null) {
+            try {
+                while (cursor.moveToNext()) {
+                    long id = cursor.getLong(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_ID));
+                    double latitude = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_LATITUDE));
+                    double longitude = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_LONGITUDE));
+                    int color = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_COLOR));
+                    String type = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_TYPE));
+
+                    Log.d("DatabaseValues", "ID: " + id + ", Latitude: " + latitude + ", Longitude: " + longitude + ", Color: " + color + ", Type: " + type);
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+    }
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -112,7 +158,7 @@ public class MainActivity extends Activity {
         LocationListener locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-
+                printDatabaseValues();
                 // get coordinates from gps' location object (android documentation)
                 double latitude = location.getLatitude();
                 double longitude = location.getLongitude();

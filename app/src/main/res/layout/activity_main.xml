@@ -3,6 +3,8 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
 
+
+
     <org.osmdroid.views.MapView
         android:id="@+id/map"
         android:layout_width="fill_parent"
@@ -20,4 +22,15 @@
         android:background="@drawable/ic_lte"
         android:onClick="toggleMode" />
 
+    <Button
+        android:id="@+id/btn_toggle_distances"
+        android:layout_width="102dp"
+        android:layout_height="61dp"
+        android:layout_gravity="bottom|right"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="84dp"
+        android:layout_marginTop="16dp"
+        android:background="@android:color/transparent"
+        android:text="10M"
+        android:onClick="toggleDistance"/>
 </FrameLayout>

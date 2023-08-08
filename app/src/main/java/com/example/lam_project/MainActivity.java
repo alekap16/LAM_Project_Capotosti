@@ -14,6 +14,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -45,6 +46,7 @@ public class MainActivity extends Activity {
     private static final int MODE_SOUND = 2;
 
     private int currentMode = MODE_LTE;
+    private String currentDistanceMode = "10M";
     public void printDatabaseValues() {
         // Get a reference to the database helper
         Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
@@ -143,11 +145,12 @@ public class MainActivity extends Activity {
         map = (MapView) findViewById(R.id.map);
 
         map.setTileSource(TileSourceFactory.MAPNIK);
-        Button toggleButton = findViewById(R.id.btn_toggle_mode);
-        toggleButton.setOnClickListener(this::toggleMode);
+        Button toggleModeButton = findViewById(R.id.btn_toggle_mode);
+        toggleModeButton.setOnClickListener(this::toggleMode);
+        Button toggleDistanceButton = findViewById(R.id.btn_toggle_distances);
+        toggleDistanceButton.setOnClickListener(this::toggleDistance);
         map.setClickable(false);
         map.setMultiTouchControls(false);
-
         startLocationUpdates();
 
         /*
@@ -158,19 +161,52 @@ public class MainActivity extends Activity {
 
     public void toggleMode(View view) {
         Button toggleButton = (Button) view;
-
+        //This switch case isn't broken as it may seems; it kinda works for the next iteration. If I
+        //press the LTE signal it means i'm switching with a single 'tap' to the Wifi, so I'm
+        //looking to trigger the Wi-Fi related stuff, same goes for the other two.
         switch (currentMode) {
             case MODE_LTE:
+                Toast.makeText(this, "Wi-Fi signal", Toast.LENGTH_SHORT).show();
+                map.getOverlays().clear();
                 currentMode = MODE_WIFI;
                 toggleButton.setBackgroundResource(R.drawable.ic_wifi);
                 break;
             case MODE_WIFI:
+                Toast.makeText(this, "Acustic noise", Toast.LENGTH_SHORT).show();
+                map.getOverlays().clear();
                 currentMode = MODE_SOUND;
                 toggleButton.setBackgroundResource(R.drawable.ic_sound);
                 break;
             case MODE_SOUND:
+                Toast.makeText(this, "LTE signal", Toast.LENGTH_SHORT).show();
+                map.getOverlays().clear();
                 currentMode = MODE_LTE;
                 toggleButton.setBackgroundResource(R.drawable.ic_lte);
+                break;
+        }
+    }
+
+    public void toggleDistance(View view) {
+        Button toggleButton = (Button) view;
+        //Same mechanism: the current selection triggers the next and so on
+        switch (currentDistanceMode) {
+            case "10M":
+                Toast.makeText(this, "100 meters range", Toast.LENGTH_SHORT).show();
+                map.getOverlays().clear();
+                currentDistanceMode = "100M";
+                toggleButton.setText("100M");
+                break;
+            case "100M":
+                Toast.makeText(this, "1 kilometer range", Toast.LENGTH_SHORT).show();
+                map.getOverlays().clear();
+                currentDistanceMode = "1KM";
+                toggleButton.setText("1KM");
+                break;
+            case "1KM":
+                Toast.makeText(this, "10 meters range", Toast.LENGTH_SHORT).show();
+                map.getOverlays().clear();
+                currentDistanceMode = "10M";
+                toggleButton.setText("10M");
                 break;
         }
     }

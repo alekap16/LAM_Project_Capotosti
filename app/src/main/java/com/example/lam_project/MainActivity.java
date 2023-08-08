@@ -12,6 +12,8 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -38,6 +40,11 @@ public class MainActivity extends Activity {
     private boolean isCameraFixed = true;
     private SignalStrengthManager signalStrengthManager;
 
+    private static final int MODE_LTE = 0;
+    private static final int MODE_WIFI = 1;
+    private static final int MODE_SOUND = 2;
+
+    private int currentMode = MODE_LTE;
     public void printDatabaseValues() {
         // Get a reference to the database helper
         Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
@@ -136,7 +143,8 @@ public class MainActivity extends Activity {
         map = (MapView) findViewById(R.id.map);
 
         map.setTileSource(TileSourceFactory.MAPNIK);
-
+        Button toggleButton = findViewById(R.id.btn_toggle_mode);
+        toggleButton.setOnClickListener(this::toggleMode);
         map.setClickable(false);
         map.setMultiTouchControls(false);
 
@@ -146,6 +154,25 @@ public class MainActivity extends Activity {
         GeoPoint startPoint = new GeoPoint(44.494887, 11.3426163);
         mapController.setCenter(startPoint);*/
 
+    }
+
+    public void toggleMode(View view) {
+        Button toggleButton = (Button) view;
+
+        switch (currentMode) {
+            case MODE_LTE:
+                currentMode = MODE_WIFI;
+                toggleButton.setBackgroundResource(R.drawable.ic_wifi);
+                break;
+            case MODE_WIFI:
+                currentMode = MODE_SOUND;
+                toggleButton.setBackgroundResource(R.drawable.ic_sound);
+                break;
+            case MODE_SOUND:
+                currentMode = MODE_LTE;
+                toggleButton.setBackgroundResource(R.drawable.ic_lte);
+                break;
+        }
     }
     @Override
     protected void onDestroy() {

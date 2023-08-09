@@ -4,7 +4,9 @@ package com.example.lam_project;
 import android.graphics.Color;
 import android.util.Log;
 
+import com.example.lam_project.managers.DatabaseManager;
 import com.example.lam_project.managers.SignalStrengthManager;
+import com.example.lam_project.model.Square;
 
 import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
@@ -31,12 +33,65 @@ public class GridCreator {
         // No need for any constructor parameters in this case
     }
     // Method to create and display the grid overlay
-    public static void createGridOverlay(MapView mapView, double latitude, double longitude, double squareSizeMeters) {
+    public static List<Square> retrieveSquares(MapView map,  int mode, double squareSizeMeters) {
+        DatabaseManager databaseManager = new DatabaseManager(map.getContext());
+        List<Square> squares = databaseManager.getAllSquares();
+
+        List<Square> filteredSquares = new ArrayList<>();
+        for (Square square : squares) {
+            if (square.getType() == mode && square.getSquareSize() == squareSizeMeters) {
+                filteredSquares.add(square);
+            }
+        }
+        databaseManager.close();
+        return filteredSquares;
+    }
+    public static void createGridExistingSquares(MapView mapView, Square existingSquare) {
+        if (mapView == null)
+            return;
+
+        double latitude = existingSquare.getLatitude();
+        double longitude = existingSquare.getLongitude();
+        double squareSizeMeters = existingSquare.getSquareSize();
+        int mode = existingSquare.getType();
+
+
+        if (!doesSquareOverlap(latitude, longitude, squareSizeMeters, mode)) {
+            double latitudeDiff = metersToLatitude(squareSizeMeters);
+            double longitudeDiff = metersToLongitude(squareSizeMeters, latitude);
+
+            // Calculate the area of the square grid
+            double latStart = latitude - 0.5 * latitudeDiff;
+            double latEnd = latitude + 0.5 * latitudeDiff;
+            double lonStart = longitude - 0.5 * longitudeDiff;
+            double lonEnd = longitude + 0.5 * longitudeDiff;
+
+            // Create the square around the given coordinates
+            List<GeoPoint> squarePoints = new ArrayList<>();
+            squarePoints.add(new GeoPoint(latStart, lonStart));
+            squarePoints.add(new GeoPoint(latEnd, lonStart));
+            squarePoints.add(new GeoPoint(latEnd, lonEnd));
+            squarePoints.add(new GeoPoint(latStart, lonEnd));
+
+            Polygon square = new Polygon(mapView);
+            square.setPoints(squarePoints);
+            square.setStrokeColor(Color.RED);
+            square.setStrokeWidth(4f);
+            mapView.getOverlayManager().add(square);
+
+            PainterExistingSquares.paintExistingSquares(mapView, square, existingSquare.getColor());
+            // Store the current LTE signal strength from SignalStrengthManager
+
+            mapView.invalidate();
+        }
+    }
+    public static void createGridOverlay(MapView mapView, double latitude, double longitude,
+                                         double squareSizeMeters, int mode) {
         if (mapView == null)
             return;
 
 
-        if (!doesSquareOverlap(latitude, longitude, squareSizeMeters)) {
+        if (!doesSquareOverlap(latitude, longitude, squareSizeMeters, mode)) {
             double latitudeDiff = metersToLatitude(squareSizeMeters);
             double longitudeDiff = metersToLongitude(squareSizeMeters, latitude);
 
@@ -68,7 +123,8 @@ public class GridCreator {
 
                     //Log.d("SignalStrength", "LTE Signal Strength: " + signalStrength);
                     // Paint the square based on the current LTE signal strength
-                    LTESignalPainter.paintSquareByLTESignalStrength(mapView, square, currentLTESignalStrength);
+                    LTESignalPainter.paintSquareByLTESignalStrength(mapView, square,
+                            currentLTESignalStrength, mode, squareSizeMeters);
                     signalStrengthManager.stopSignalStrengthUpdates();
                 }
             });
@@ -90,7 +146,7 @@ public class GridCreator {
     }
 
     // Helper method that chjecks if overlaps are a thing
-    private static boolean doesSquareOverlap(double latitude, double longitude, double squareSizeMeters) {
+    private static boolean doesSquareOverlap(double latitude, double longitude, double squareSizeMeters, int mode) {
         for (Polygon square : existingSquares) {
             List<GeoPoint> points = square.getPoints();
             double latStart = points.get(0).getLatitude();

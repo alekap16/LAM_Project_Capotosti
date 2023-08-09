@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat;
 
 import com.example.lam_project.managers.DatabaseManager;
 import com.example.lam_project.managers.SignalStrengthManager;
+import com.example.lam_project.model.Square;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
@@ -31,9 +32,13 @@ import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
 
 import java.io.File;
+import java.util.List;
 
 public class MainActivity extends Activity {
     MapView map = null;
+    private static double RANGE_SMALL = 10.0;
+    private static double RANGE_MEDIUM = 100.0;
+    private static double RANGE_BIG = 1000.0;
     private static double squareSizeMeters = 10.0;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private double latitude;
@@ -41,12 +46,11 @@ public class MainActivity extends Activity {
     private boolean isCameraFixed = true;
     private SignalStrengthManager signalStrengthManager;
 
-    private static final int MODE_LTE = 0;
-    private static final int MODE_WIFI = 1;
-    private static final int MODE_SOUND = 2;
+    private static final int MODE_LTE = 1;
+    private static final int MODE_WIFI = 2;
+    private static final int MODE_SOUND = 3;
 
     private int currentMode = MODE_LTE;
-    private String currentDistanceMode = "10M";
     public void printDatabaseValues() {
         // Get a reference to the database helper
         Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
@@ -59,7 +63,8 @@ public class MainActivity extends Activity {
                 DatabaseManager.COLUMN_LATITUDE,
                 DatabaseManager.COLUMN_LONGITUDE,
                 DatabaseManager.COLUMN_COLOR,
-                DatabaseManager.COLUMN_TYPE
+                DatabaseManager.COLUMN_TYPE,
+                DatabaseManager.COLUMN_SIZE
         };
 
         Cursor cursor = db.query(
@@ -81,8 +86,11 @@ public class MainActivity extends Activity {
                     double longitude = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_LONGITUDE));
                     int color = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_COLOR));
                     String type = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_TYPE));
+                    double size = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_SIZE));
 
-                    Log.d("DatabaseValues", "ID: " + id + ", Latitude: " + latitude + ", Longitude: " + longitude + ", Color: " + color + ", Type: " + type);
+                    Log.d("DatabaseValues", "ID: " + id + ", Latitude: " + latitude + "," +
+                            " Longitude: " + longitude + ", Color: " + color + ", Type: " +
+                            type + ", Size: " + size);
                 }
             } finally {
                 cursor.close();
@@ -170,18 +178,21 @@ public class MainActivity extends Activity {
                 map.getOverlays().clear();
                 currentMode = MODE_WIFI;
                 toggleButton.setBackgroundResource(R.drawable.ic_wifi);
+                printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
                 break;
             case MODE_WIFI:
                 Toast.makeText(this, "Acustic noise", Toast.LENGTH_SHORT).show();
                 map.getOverlays().clear();
                 currentMode = MODE_SOUND;
                 toggleButton.setBackgroundResource(R.drawable.ic_sound);
+                printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
                 break;
             case MODE_SOUND:
                 Toast.makeText(this, "LTE signal", Toast.LENGTH_SHORT).show();
                 map.getOverlays().clear();
                 currentMode = MODE_LTE;
                 toggleButton.setBackgroundResource(R.drawable.ic_lte);
+                printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
                 break;
         }
     }
@@ -189,25 +200,36 @@ public class MainActivity extends Activity {
     public void toggleDistance(View view) {
         Button toggleButton = (Button) view;
         //Same mechanism: the current selection triggers the next and so on
-        switch (currentDistanceMode) {
-            case "10M":
+        switch ((int) squareSizeMeters) {
+            case 10:
                 Toast.makeText(this, "100 meters range", Toast.LENGTH_SHORT).show();
                 map.getOverlays().clear();
-                currentDistanceMode = "100M";
+                squareSizeMeters = RANGE_MEDIUM;
                 toggleButton.setText("100M");
+                printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
                 break;
-            case "100M":
+            case 100:
                 Toast.makeText(this, "1 kilometer range", Toast.LENGTH_SHORT).show();
                 map.getOverlays().clear();
-                currentDistanceMode = "1KM";
+                squareSizeMeters = RANGE_BIG;
                 toggleButton.setText("1KM");
+                printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
                 break;
-            case "1KM":
+            case 1000:
                 Toast.makeText(this, "10 meters range", Toast.LENGTH_SHORT).show();
                 map.getOverlays().clear();
-                currentDistanceMode = "10M";
+                squareSizeMeters = RANGE_SMALL;
                 toggleButton.setText("10M");
+                printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
                 break;
+        }
+    }
+
+    public void printExistingSquaresOnButtonChange(int currentMode, double squareSizeMeters){
+        List<Square> squares = GridCreator.retrieveSquares(map, currentMode, squareSizeMeters);
+
+        for (Square square : squares) {
+        GridCreator.createGridExistingSquares(map, square);
         }
     }
     @Override
@@ -221,7 +243,7 @@ public class MainActivity extends Activity {
         LocationListener locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                printDatabaseValues();
+                //printDatabaseValues();
                 // get coordinates from gps' location object (android documentation)
                 double latitude = location.getLatitude();
                 double longitude = location.getLongitude();
@@ -234,7 +256,7 @@ public class MainActivity extends Activity {
                     map.getController().setCenter(startPoint);
                     // Set the desired fixed zoom level (e.g., 12.0)
                     mapController.setZoom(21.0);
-                    GridCreator.createGridOverlay(map, latitude, longitude, squareSizeMeters);
+                    GridCreator.createGridOverlay(map, latitude, longitude, squareSizeMeters, currentMode);
 
                 }
                 /*
@@ -269,7 +291,7 @@ public class MainActivity extends Activity {
         }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                 1000, // Minimum time interval between updates (e.g., 1000ms = 1 second)
-                10,   // Minimum distance between updates (e.g., 10 meters)
+                1,   // Minimum distance between updates (e.g., 10 meters)
                 locationListener);
     }
 

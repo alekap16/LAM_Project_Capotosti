@@ -7,13 +7,16 @@ public class Square {
     private double longitude;
     private int color;
 
-    private String type;
+    //1 LTE, 2 Wi-Fi, 3 Noise
+    private int type;
+    private double squareSize;
 
-    public Square(double latitude, double longitude, int color, String type) {
+    public Square(double latitude, double longitude, int color, int type, double squareSize) {
         this.latitude = latitude;
         this.longitude = longitude;
         this.color = color;
         this.type = type;
+        this.squareSize = squareSize;
     }
 
     //Getters
@@ -37,9 +40,10 @@ public class Square {
         return color;
     }
 
-    public String getType() {
+    public int getType() {
         return type;
     }
+    public double getSquareSize() { return squareSize; }
 
     //Setters
     public void setColor(int color) {
@@ -54,7 +58,8 @@ public class Square {
         this.longitude = longitude;
     }
 
-    public void setType(String type) {
+    public void setType(int type) {
         this.type = type;
     }
+    public void setSquareSize(double squareSize) { this.squareSize = squareSize; }
 }

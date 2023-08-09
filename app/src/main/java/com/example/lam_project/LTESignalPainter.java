@@ -27,8 +27,11 @@ public class LTESignalPainter {
     private static final int ALPHA_TRANSPARENT = 100; // Adjust this value to control transparency
 
 
+
     // Method to paint the square based on the LTE signal strength
-    public static void paintSquareByLTESignalStrength(MapView map, Polygon square, int signalStrength) {
+    public static void paintSquareByLTESignalStrength(MapView map, Polygon square,
+                                                      int signalStrength, int mode,
+                                                      double squareSizeMeters) {
         if (map == null || square == null)
             return;
 
@@ -58,19 +61,20 @@ public class LTESignalPainter {
         diagonalPatternSquare.setStrokeColor(square.getStrokeColor());
         diagonalPatternSquare.setFillColor(square.getFillColor());
 
+        saveSquareToDatabase(square, color, mode, map, squareSizeMeters);
         map.getOverlayManager().add(diagonalPatternSquare);
         map.invalidate();
         // Save the square into the database
-        saveSquareToDatabase(square, color, "LTE", map);
     }
 
-    private static void saveSquareToDatabase(Polygon square, int color, String type, MapView map) {
+    private static void saveSquareToDatabase(Polygon square, int color, int mode, MapView map,
+                                             double squareSizeMeters) {
         // Get the latitude and longitude of the square
         double latitude = square.getPoints().get(0).getLatitude();
         double longitude = square.getPoints().get(0).getLongitude();
 
         // Create a new Square object
-        Square squareObject = new Square(latitude, longitude, color, type);
+        Square squareObject = new Square(latitude, longitude, color, mode, squareSizeMeters);
 
         // Get a reference to the database helper
         Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
@@ -83,9 +87,9 @@ public class LTESignalPainter {
         values.put(DatabaseManager.COLUMN_LONGITUDE, squareObject.getLongitude());
         values.put(DatabaseManager.COLUMN_COLOR, squareObject.getColor());
         values.put(DatabaseManager.COLUMN_TYPE, squareObject.getType());
+        values.put(DatabaseManager.COLUMN_SIZE, squareObject.getSquareSize());
         long id = db.insert(DatabaseManager.TABLE_NAME, null, values);
-
-        // Set the ID of the square object after insertion
+        // Set the ID of the square object after insertion, maybe removing this later?
         squareObject.setId(id);
     }
 }

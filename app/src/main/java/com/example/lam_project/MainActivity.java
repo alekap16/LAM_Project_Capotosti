@@ -10,6 +10,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
@@ -51,6 +52,8 @@ public class MainActivity extends Activity {
     private static final int MODE_SOUND = 3;
 
     private int currentMode = MODE_LTE;
+    private boolean isButtonRangesClickable = true;
+    private boolean isButtonModeClickable = true;
     public void printDatabaseValues() {
         // Get a reference to the database helper
         Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
@@ -169,6 +172,20 @@ public class MainActivity extends Activity {
 
     public void toggleMode(View view) {
         Button toggleButton = (Button) view;
+        if (!isButtonModeClickable) {
+            return;
+        }
+
+        // Disable button click temporarily
+        isButtonModeClickable = false;
+
+        // Add a delay of 1 second before enabling button click again
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                isButtonModeClickable = true;
+            }
+        }, 5000);
         //This switch case isn't broken as it may seems; it kinda works for the next iteration. If I
         //press the LTE signal it means i'm switching with a single 'tap' to the Wifi, so I'm
         //looking to trigger the Wi-Fi related stuff, same goes for the other two.
@@ -199,6 +216,20 @@ public class MainActivity extends Activity {
 
     public void toggleDistance(View view) {
         Button toggleButton = (Button) view;
+        if (!isButtonRangesClickable) {
+            return;
+        }
+
+        // Disable button click temporarily
+        isButtonRangesClickable = false;
+
+        // Add a delay of 1 second before enabling button click again
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                isButtonRangesClickable = true;
+            }
+        }, 5000);
         //Same mechanism: the current selection triggers the next and so on
         switch ((int) squareSizeMeters) {
             case 10:

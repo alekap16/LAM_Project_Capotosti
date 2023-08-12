@@ -3,17 +3,22 @@ package com.example.lam_project.model;
 public class Square {
 
     private long id;
-    private double latitude;
-    private double longitude;
+    private double latitudeStart;
+    private double longitudeStart;
+    private double latitudeEnd;
+    private double longitudeEnd;
     private int color;
 
     //1 LTE, 2 Wi-Fi, 3 Noise
     private int type;
     private double squareSize;
 
-    public Square(double latitude, double longitude, int color, int type, double squareSize) {
-        this.latitude = latitude;
-        this.longitude = longitude;
+    public Square(double latitudeStart, double longitudeStart, double latitudeEnd,
+                  double longitudeEnd, int color, int type, double squareSize) {
+        this.latitudeStart = latitudeStart;
+        this.longitudeStart = longitudeStart;
+        this.latitudeEnd = latitudeEnd;
+        this.longitudeEnd = longitudeEnd;
         this.color = color;
         this.type = type;
         this.squareSize = squareSize;
@@ -28,13 +33,15 @@ public class Square {
         this.id = id;
     }
 
-    public double getLatitude() {
-        return latitude;
+    public double getLatitudeStart() {
+        return latitudeStart;
     }
 
-    public double getLongitude() {
-        return longitude;
+    public double getLongitudeStart() {
+        return longitudeStart;
     }
+    public double getLatitudeEnd(){ return latitudeEnd; }
+    public double getLongitudeEnd(){ return longitudeEnd; }
 
     public int getColor() {
         return color;
@@ -50,13 +57,13 @@ public class Square {
         this.color = color;
     }
 
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
+    public void setLatitudeStart(double latitudeStart) {
+        this.latitudeStart = latitudeStart;
     }
 
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
-    }
+    public void setLongitudeStart(double longitudeStart) { this.longitudeStart = longitudeStart; }
+    public void setLatitudeEnd(double latitudeEnd) { this.latitudeEnd = latitudeEnd; }
+    public void setLongitudeEnd(double longitudeEnd) { this.longitudeEnd = longitudeEnd; }
 
     public void setType(int type) {
         this.type = type;

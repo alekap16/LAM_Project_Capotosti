@@ -27,9 +27,7 @@ import com.example.lam_project.model.Square;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
-import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
-import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
 
 import java.io.File;
@@ -63,8 +61,10 @@ public class MainActivity extends Activity {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         String[] projection = {
                 DatabaseManager.COLUMN_ID,
-                DatabaseManager.COLUMN_LATITUDE,
-                DatabaseManager.COLUMN_LONGITUDE,
+                DatabaseManager.COLUMN_LATITUDE_START,
+                DatabaseManager.COLUMN_LONGITUDE_START,
+                DatabaseManager.COLUMN_LATITUDE_END,
+                DatabaseManager.COLUMN_LONGITUDE_END,
                 DatabaseManager.COLUMN_COLOR,
                 DatabaseManager.COLUMN_TYPE,
                 DatabaseManager.COLUMN_SIZE
@@ -85,8 +85,8 @@ public class MainActivity extends Activity {
             try {
                 while (cursor.moveToNext()) {
                     long id = cursor.getLong(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_ID));
-                    double latitude = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_LATITUDE));
-                    double longitude = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_LONGITUDE));
+                    double latitude = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_LATITUDE_START));
+                    double longitude = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_LONGITUDE_START));
                     int color = cursor.getInt(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_COLOR));
                     String type = cursor.getString(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_TYPE));
                     double size = cursor.getDouble(cursor.getColumnIndexOrThrow(DatabaseManager.COLUMN_SIZE));
@@ -157,6 +157,9 @@ public class MainActivity extends Activity {
 
         map.setTileSource(TileSourceFactory.MAPNIK);
         Button toggleModeButton = findViewById(R.id.btn_toggle_mode);
+        //this name is dumb because it's not actually on Button change (in this instance);
+        //but It does the same static thing aka printing the squares in db so no need to change
+        printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
         toggleModeButton.setOnClickListener(this::toggleMode);
         Button toggleDistanceButton = findViewById(R.id.btn_toggle_distances);
         toggleDistanceButton.setOnClickListener(this::toggleDistance);
@@ -287,7 +290,7 @@ public class MainActivity extends Activity {
                     map.getController().setCenter(startPoint);
                     // Set the desired fixed zoom level (e.g., 12.0)
                     mapController.setZoom(21.0);
-                    GridCreator.createGridOverlay(map, latitude, longitude, squareSizeMeters, currentMode);
+                    GridCreator.createSquare(map, latitude, longitude, squareSizeMeters, currentMode);
 
                 }
                 /*

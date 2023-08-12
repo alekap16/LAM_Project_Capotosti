@@ -20,26 +20,15 @@ public class PainterExistingSquares {
         if (map == null || square == null)
             return;
 
-        int colorExistingSquare = color;
-        colorExistingSquare = Color.argb(ALPHA_TRANSPARENT, Color.red(COLOR_GOOD), Color.green(COLOR_GOOD), Color.blue(COLOR_GOOD));
-
 
         square.setStrokeColor(color);
+        square.setStrokeWidth(2f);
         square.setFillColor(color);
 
         // Create a custom diagonal pattern for the square
-        Path diagonalPattern = new Path();
-        diagonalPattern.moveTo((float) square.getPoints().get(0).getLongitude(), (float) square.getPoints().get(0).getLatitude());
-        diagonalPattern.lineTo((float) square.getPoints().get(2).getLongitude(), (float) square.getPoints().get(2).getLatitude());
 
-        DiagonalPatternPolygon diagonalPatternSquare = new DiagonalPatternPolygon();
-        diagonalPatternSquare.setPoints(square.getPoints());
-        diagonalPatternSquare.setPatternPath(diagonalPattern);
-        diagonalPatternSquare.setPatternScale(10); // Adjust the scale of the pattern
-        diagonalPatternSquare.setStrokeColor(square.getStrokeColor());
-        diagonalPatternSquare.setFillColor(square.getFillColor());
 
-        map.getOverlayManager().add(diagonalPatternSquare);
+        map.getOverlayManager().add(square);
         map.invalidate();
     }
 }

@@ -17,8 +17,10 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
     public static final String TABLE_NAME = "squares";
     public static final String COLUMN_ID = "_id";
-    public static final String COLUMN_LATITUDE = "latitude";
-    public static final String COLUMN_LONGITUDE = "longitude";
+    public static final String COLUMN_LATITUDE_START = "latitudeStart";
+    public static final String COLUMN_LONGITUDE_START = "longitudeStart";
+    public static final String COLUMN_LATITUDE_END = "latitudeEnd";
+    public static final String COLUMN_LONGITUDE_END = "longitudeEnd";
     public static final String COLUMN_COLOR = "color";
     public static final String COLUMN_TYPE = "type";
     public static final String COLUMN_SIZE = "size";
@@ -27,8 +29,10 @@ public class DatabaseManager extends SQLiteOpenHelper {
     private static final String CREATE_SQUARE_TABLE =
             "CREATE TABLE " + TABLE_NAME + " (" +
                     COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    COLUMN_LATITUDE + " REAL NOT NULL, " +
-                    COLUMN_LONGITUDE + " REAL NOT NULL, " +
+                    COLUMN_LATITUDE_START + " REAL NOT NULL, " +
+                    COLUMN_LONGITUDE_START + " REAL NOT NULL, " +
+                    COLUMN_LATITUDE_END + " REAL NOT NULL, " +
+                    COLUMN_LONGITUDE_END + " REAL NOT NULL, " +
                     COLUMN_TYPE + " INTEGER NOT NULL, " +
                     COLUMN_SIZE + " REAL NOT NULL, " +
                     COLUMN_COLOR + " INTEGER NOT NULL)";
@@ -40,13 +44,16 @@ public class DatabaseManager extends SQLiteOpenHelper {
         Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
         if (cursor.moveToFirst()) {
             do {
-                double latitude = cursor.getDouble(cursor.getColumnIndex(COLUMN_LATITUDE));
-                double longitude = cursor.getDouble(cursor.getColumnIndex(COLUMN_LONGITUDE));
+                double latitudeStart = cursor.getDouble(cursor.getColumnIndex(COLUMN_LATITUDE_START));
+                double longitudeStart = cursor.getDouble(cursor.getColumnIndex(COLUMN_LONGITUDE_START));
+                double latitudeEnd = cursor.getDouble(cursor.getColumnIndex(COLUMN_LATITUDE_END));
+                double longitudeEnd = cursor.getDouble(cursor.getColumnIndex(COLUMN_LONGITUDE_END));
                 int color = cursor.getInt(cursor.getColumnIndex(COLUMN_COLOR));
                 int type = cursor.getInt(cursor.getColumnIndex(COLUMN_TYPE));
                 double squareSize = cursor.getDouble(cursor.getColumnIndex(COLUMN_SIZE));
 
-                squares.add(new Square(latitude, longitude, color, type, squareSize));
+                squares.add(new Square(latitudeStart, longitudeStart, latitudeEnd, longitudeEnd,
+                        color, type, squareSize));
             } while (cursor.moveToNext());
         }
 

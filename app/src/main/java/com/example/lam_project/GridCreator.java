@@ -2,6 +2,8 @@ package com.example.lam_project;
 
 
 import android.graphics.Color;
+import android.os.Handler;
+import android.telephony.SignalStrength;
 import android.util.Log;
 
 import com.example.lam_project.managers.DatabaseManager;
@@ -92,21 +94,26 @@ public class GridCreator {
 
             Polygon square = new Polygon(mapView);
             square.setPoints(squarePoints);
-            mapView.getOverlayManager().add(square);
+            //mapView.getOverlayManager().add(square);
             // Store the current LTE signal strength from SignalStrengthManager
-            SignalStrengthManager signalStrengthManager = new SignalStrengthManager(mapView.getContext());
-            signalStrengthManager.requestSignalStrengthUpdates(signalStrength -> {
-                // Store the current LTE signal strength
-                currentLTESignalStrength = signalStrength;
+            SignalStrengthManager signalStrengthManager = new
+                    SignalStrengthManager(mapView.getContext());
 
-                Log.d("SignalStrength", "LTE Signal Strength: " + signalStrength);
-                // Paint the square based on the current LTE signal strength
-                LTESignalPainter.paintSquareByLTESignalStrength(mapView, square,
-                        currentLTESignalStrength, mode, squareSizeMeters);
-                signalStrengthManager.stopSignalStrengthUpdates();
-            });
             //existingSquares.add(square);
-            mapView.invalidate();
+//mapView.invalidate();
+
+            signalStrengthManager.requestSignalStrengthUpdates(signalStrength -> {
+
+                    // Store the current LTE signal strength
+                    currentLTESignalStrength = signalStrength;
+
+                    Log.d("SignalStrength", "LTE Signal Strength: " + signalStrength);
+                    signalStrengthManager.stopSignalStrengthUpdates();
+            });
+
+            // Paint the square based on the current LTE signal strength
+            LTESignalPainter.paintSquareByLTESignalStrength(mapView, square,
+                    currentLTESignalStrength, mode, squareSizeMeters);
         }
     }
 
@@ -126,16 +133,24 @@ public class GridCreator {
     private static boolean doesSquareOverlap(List<Square> existingSquares,
                                              double latitude, double longitude,
                                              double squareSizeMeters, int mode) {
+
         for (Square square : existingSquares) {
             double latStart = square.getLatitudeStart();
             double latEnd = square.getLatitudeEnd();
             double lonStart = square.getLongitudeStart();
-            double lonEnd = square.getLatitudeEnd();
+            double lonEnd = square.getLongitudeEnd();
 
             // Check if coordinates collides with the squares already painted for overlaps
-            for (double lat = latitude - 0.5 * metersToLatitude(squareSizeMeters); lat <= latitude + 0.5 * metersToLatitude(squareSizeMeters); lat += 0.1 * metersToLatitude(squareSizeMeters)) {
-                for (double lon = longitude - 0.5 * metersToLongitude(squareSizeMeters, latitude); lon <= longitude + 0.5 * metersToLongitude(squareSizeMeters, latitude); lon += 0.1 * metersToLongitude(squareSizeMeters, latitude)) {
+            for (double lat = latitude - 0.5 * metersToLatitude(squareSizeMeters); lat <= latitude + 0.5 * metersToLatitude(squareSizeMeters); lat += 0.5 * metersToLatitude(squareSizeMeters)) {
+                for (double lon = longitude - 0.5 * metersToLongitude(squareSizeMeters, latitude); lon <= longitude + 0.5 * metersToLongitude(squareSizeMeters, latitude); lon += 0.5 * metersToLongitude(squareSizeMeters, latitude)) {
                     if (lat >= latStart && lat <= latEnd && lon >= lonStart && lon <= lonEnd) {
+
+                        Log.d("lat", "lat: "+lat);
+                        Log.d("latStart", "latStart: "+latStart);
+                        Log.d("latEnd", "latEnd: "+latEnd);
+                        Log.d("lon", "lon: "+lon);
+                        Log.d("lonStart", "lonStart: "+lonStart);
+                        Log.d("lonEnd", "lonEnd: "+lonEnd);
                         return true; //overlap so don't print
                     }
                 }

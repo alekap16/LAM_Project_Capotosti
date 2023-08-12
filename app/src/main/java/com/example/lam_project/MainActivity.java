@@ -273,7 +273,6 @@ public class MainActivity extends Activity {
     }
     private void startLocationUpdates() {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
         LocationListener locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -297,6 +296,7 @@ public class MainActivity extends Activity {
                 // Create a GeoPoint using the latitude and longitude variables
                 GeoPoint startPoint = new GeoPoint(latitude, longitude);
                 map.getController().setCenter(startPoint);*/
+
             }
 
             @Override

@@ -74,16 +74,17 @@ public class LTESignalPainter {
         // Insert the square into the database
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(DatabaseManager.COLUMN_LATITUDE_START, squareObject.getLatitudeStart());
-        values.put(DatabaseManager.COLUMN_LONGITUDE_START, squareObject.getLongitudeStart());
-        values.put(DatabaseManager.COLUMN_LATITUDE_END, squareObject.getLatitudeEnd());
-        values.put(DatabaseManager.COLUMN_LONGITUDE_END, squareObject.getLongitudeEnd());
-        values.put(DatabaseManager.COLUMN_COLOR, squareObject.getColor());
-        values.put(DatabaseManager.COLUMN_TYPE, squareObject.getType());
-        values.put(DatabaseManager.COLUMN_SIZE, squareObject.getSquareSize());
-        long id = db.insert(DatabaseManager.TABLE_NAME, null, values);
+        values.put(dbHelper.COLUMN_LATITUDE_START, squareObject.getLatitudeStart());
+        values.put(dbHelper.COLUMN_LONGITUDE_START, squareObject.getLongitudeStart());
+        values.put(dbHelper.COLUMN_LATITUDE_END, squareObject.getLatitudeEnd());
+        values.put(dbHelper.COLUMN_LONGITUDE_END, squareObject.getLongitudeEnd());
+        values.put(dbHelper.COLUMN_COLOR, squareObject.getColor());
+        values.put(dbHelper.COLUMN_TYPE, squareObject.getType());
+        values.put(dbHelper.COLUMN_SIZE, squareObject.getSquareSize());
+        long id = db.insert(dbHelper.TABLE_NAME, null, values);
         // Set the ID of the square object after insertion, maybe removing this later?
         squareObject.setId(id);
+        Log.d("DB check", "DB ENTRY CHECK");
         db.close();
         dbHelper.close();
     }

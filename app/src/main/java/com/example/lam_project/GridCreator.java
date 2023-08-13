@@ -8,6 +8,7 @@ import android.util.Log;
 
 import com.example.lam_project.managers.DatabaseManager;
 import com.example.lam_project.managers.SignalStrengthManager;
+import com.example.lam_project.managers.WifiSignalManager;
 import com.example.lam_project.model.Square;
 
 import org.osmdroid.util.GeoPoint;
@@ -23,7 +24,7 @@ import java.util.List;
 public class GridCreator {
 
     private static int currentLTESignalStrength = 0; // Variable to store the current LTE signal strength
-
+private static int currentWiFiSignalLevel = 0; // Store the wifi signal expressed in level.
 
     //Create each unique ID for squares, needs for overlap prevention
     private static final List<Polygon> existingSquares = new ArrayList<>();
@@ -95,25 +96,33 @@ public class GridCreator {
             Polygon square = new Polygon(mapView);
             square.setPoints(squarePoints);
             //mapView.getOverlayManager().add(square);
-            // Store the current LTE signal strength from SignalStrengthManager
-            SignalStrengthManager signalStrengthManager = new
-                    SignalStrengthManager(mapView.getContext());
 
             //existingSquares.add(square);
 //mapView.invalidate();
-
-            signalStrengthManager.requestSignalStrengthUpdates(signalStrength -> {
+            if (mode == 1) {
+                // Store the current LTE signal strength from SignalStrengthManager
+                SignalStrengthManager signalStrengthManager = new
+                        SignalStrengthManager(mapView.getContext());
+                signalStrengthManager.requestSignalStrengthUpdates(signalStrength -> {
 
                     // Store the current LTE signal strength
                     currentLTESignalStrength = signalStrength;
 
                     Log.d("SignalStrength", "LTE Signal Strength: " + signalStrength);
                     signalStrengthManager.stopSignalStrengthUpdates();
-            });
+                });
 
-            // Paint the square based on the current LTE signal strength
-            LTESignalPainter.paintSquareByLTESignalStrength(mapView, square,
-                    currentLTESignalStrength, mode, squareSizeMeters);
+                // Paint the square based on the current LTE signal strength
+                LTESignalPainter.paintSquareByLTESignalStrength(mapView, square,
+                        currentLTESignalStrength, mode, squareSizeMeters);
+            }
+            else if(mode == 2) {
+                WifiSignalManager wifiSignalManager = new WifiSignalManager(mapView.getContext());
+                currentWiFiSignalLevel = wifiSignalManager.getWifiSignalStrength();
+                WiFiSignalPainter.paintSquareByWiFiSignalStrength(mapView, square,
+                        currentWiFiSignalLevel, mode, squareSizeMeters );
+               // Log.d("Wifi log", "Wifi signal Dbm"+wifiSignalManager.getWifiSignalStrength());
+            }
         }
     }
 
@@ -145,12 +154,12 @@ public class GridCreator {
                 for (double lon = longitude - 0.5 * metersToLongitude(squareSizeMeters, latitude); lon <= longitude + 0.5 * metersToLongitude(squareSizeMeters, latitude); lon += 0.5 * metersToLongitude(squareSizeMeters, latitude)) {
                     if (lat >= latStart && lat <= latEnd && lon >= lonStart && lon <= lonEnd) {
 
-                        Log.d("lat", "lat: "+lat);
-                        Log.d("latStart", "latStart: "+latStart);
-                        Log.d("latEnd", "latEnd: "+latEnd);
-                        Log.d("lon", "lon: "+lon);
-                        Log.d("lonStart", "lonStart: "+lonStart);
-                        Log.d("lonEnd", "lonEnd: "+lonEnd);
+//                        Log.d("lat", "lat: "+lat);
+//                        Log.d("latStart", "latStart: "+latStart);
+//                        Log.d("latEnd", "latEnd: "+latEnd);
+//                        Log.d("lon", "lon: "+lon);
+//                        Log.d("lonStart", "lonStart: "+lonStart);
+//                        Log.d("lonEnd", "lonEnd: "+lonEnd);
                         return true; //overlap so don't print
                     }
                 }

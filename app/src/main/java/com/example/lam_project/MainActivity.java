@@ -35,6 +35,8 @@ import java.util.List;
 
 public class MainActivity extends Activity {
     MapView map = null;
+
+    private static final int RECORD_AUDIO_PERMISSION_REQUEST_CODE = 1001;
     private static double RANGE_SMALL = 10.0;
     private static double RANGE_MEDIUM = 100.0;
     private static double RANGE_BIG = 1000.0;
@@ -201,11 +203,15 @@ public class MainActivity extends Activity {
                 printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
                 break;
             case MODE_WIFI:
-                Toast.makeText(this, "Acustic noise", Toast.LENGTH_SHORT).show();
-                map.getOverlays().clear();
-                currentMode = MODE_SOUND;
-                toggleButton.setBackgroundResource(R.drawable.ic_sound);
-                printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO_PERMISSION_REQUEST_CODE);
+                } else {
+                    Toast.makeText(this, "Acustic noise", Toast.LENGTH_SHORT).show();
+                    map.getOverlays().clear();
+                    currentMode = MODE_SOUND;
+                    toggleButton.setBackgroundResource(R.drawable.ic_sound);
+                    printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
+                }
                 break;
             case MODE_SOUND:
                 Toast.makeText(this, "LTE signal", Toast.LENGTH_SHORT).show();

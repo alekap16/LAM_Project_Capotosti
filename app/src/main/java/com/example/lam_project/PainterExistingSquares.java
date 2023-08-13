@@ -1,10 +1,6 @@
 package com.example.lam_project;
 
 import android.graphics.Color;
-import android.graphics.Path;
-
-import com.example.lam_project.graphics.DiagonalPatternPolygon;
-import com.example.lam_project.model.Square;
 
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Polygon;

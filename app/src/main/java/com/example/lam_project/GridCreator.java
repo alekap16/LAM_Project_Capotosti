@@ -1,15 +1,23 @@
 package com.example.lam_project;
 
 
+import android.Manifest;
+import android.app.Activity;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Handler;
 import android.telephony.SignalStrength;
 import android.util.Log;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import com.example.lam_project.managers.AcousticNoiseManager;
 import com.example.lam_project.managers.DatabaseManager;
 import com.example.lam_project.managers.SignalStrengthManager;
 import com.example.lam_project.managers.WifiSignalManager;
 import com.example.lam_project.model.Square;
+import com.example.lam_project.ui.theme.AcousticNoisePainter;
 
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -22,7 +30,7 @@ import java.util.List;
 //so i can re-use the code for 100m squares and 1km. as for now I get one done since this is
 //at first look easy to complete for other use cases
 public class GridCreator {
-
+    private static double currentNoiseLevel = 0.0;
     private static int currentLTESignalStrength = 0; // Variable to store the current LTE signal strength
 private static int currentWiFiSignalLevel = 0; // Store the wifi signal expressed in level.
 
@@ -122,7 +130,22 @@ private static int currentWiFiSignalLevel = 0; // Store the wifi signal expresse
                 WiFiSignalPainter.paintSquareByWiFiSignalStrength(mapView, square,
                         currentWiFiSignalLevel, mode, squareSizeMeters );
                // Log.d("Wifi log", "Wifi signal Dbm"+wifiSignalManager.getWifiSignalStrength());
-            }
+            } else {
+                    Log.d("Crash 1", "crash 1");
+                    AcousticNoiseManager mNoiseManager = new AcousticNoiseManager();
+
+                    Log.d("Crash 2", "crash 2");
+                    mNoiseManager.startRecording(mapView.getContext(), noiseLevel -> {
+                        currentNoiseLevel = noiseLevel;
+                        Log.d("NoiseLevel", "Current noise level: " + noiseLevel + " dB");
+                    });
+
+                    Log.d("Crash 3", "crash 3");
+                    AcousticNoisePainter.paintSquareByWiFiSignalStrength(mapView, square,
+                            currentNoiseLevel, mode, squareSizeMeters);
+                }
+
+
         }
     }
 

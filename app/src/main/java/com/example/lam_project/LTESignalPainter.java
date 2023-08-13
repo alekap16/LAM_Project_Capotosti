@@ -4,10 +4,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
-import android.graphics.Path;
 import android.util.Log;
 
-import com.example.lam_project.graphics.DiagonalPatternPolygon;
 import com.example.lam_project.managers.DatabaseManager;
 import com.example.lam_project.model.Square;
 
@@ -55,6 +53,7 @@ public class LTESignalPainter {
         // Save the square into the database
     }
 
+    //This will be detatched
     private static void saveSquareToDatabase(Polygon square, int color, int mode, MapView map,
                                              double squareSizeMeters) {
         // Get the latitude and longitude of the square

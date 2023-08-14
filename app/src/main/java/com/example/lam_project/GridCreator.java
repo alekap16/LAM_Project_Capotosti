@@ -1,23 +1,13 @@
 package com.example.lam_project;
 
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.os.Handler;
-import android.telephony.SignalStrength;
 import android.util.Log;
-
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import com.example.lam_project.managers.AcousticNoiseManager;
 import com.example.lam_project.managers.DatabaseManager;
 import com.example.lam_project.managers.SignalStrengthManager;
 import com.example.lam_project.managers.WifiSignalManager;
 import com.example.lam_project.model.Square;
-import com.example.lam_project.ui.theme.AcousticNoisePainter;
 
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -104,7 +94,6 @@ private static int currentWiFiSignalLevel = 0; // Store the wifi signal expresse
             Polygon square = new Polygon(mapView);
             square.setPoints(squarePoints);
             //mapView.getOverlayManager().add(square);
-
             //existingSquares.add(square);
 //mapView.invalidate();
             if (mode == 1) {
@@ -131,17 +120,14 @@ private static int currentWiFiSignalLevel = 0; // Store the wifi signal expresse
                         currentWiFiSignalLevel, mode, squareSizeMeters );
                // Log.d("Wifi log", "Wifi signal Dbm"+wifiSignalManager.getWifiSignalStrength());
             } else {
-                    Log.d("Crash 1", "crash 1");
                     AcousticNoiseManager mNoiseManager = new AcousticNoiseManager();
 
-                    Log.d("Crash 2", "crash 2");
                     mNoiseManager.startRecording(mapView.getContext(), noiseLevel -> {
                         currentNoiseLevel = noiseLevel;
                         Log.d("NoiseLevel", "Current noise level: " + noiseLevel + " dB");
                     });
 
-                    Log.d("Crash 3", "crash 3");
-                    AcousticNoisePainter.paintSquareByWiFiSignalStrength(mapView, square,
+                    AcousticNoisePainter.paintSquareByAcousticNoise(mapView, square,
                             currentNoiseLevel, mode, squareSizeMeters);
                 }
 

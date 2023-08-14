@@ -14,13 +14,11 @@ import com.example.lam_project.model.Square;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Polygon;
 
-//I could abstract these, but they're just 3 cases and I'd rather write the same code in different
-//classes rather than the same with switch cases logics and such
-public class WiFiSignalPainter {
+public class AcousticNoisePainter {
 
-    // Signal strength levels 0 is poor 1 is average 3 is good. Consider 0 and no wifi are the same.
-    private static final double POOR_SIGNAL_STRENGTH = 1.0;
-    private static final double AVERAGE_SIGNAL_STRENGTH = 2.0;
+    // Acoustic Noise level, this is red when its louder and green when smoother.
+    private static final double VERY_LOUD = -40.0;
+    private static final double AVERAGE_NOISE = -20.0;
 
 
     private static final int ALPHA_TRANSPARENT = 100; // Adjust this value to control transparency
@@ -28,19 +26,18 @@ public class WiFiSignalPainter {
 
 
     // Method to paint the square based on the LTE signal strength
-    public static void paintSquareByWiFiSignalStrength(MapView map, Polygon square,
-                                                      int signalStrength, int mode,
-                                                      double squareSizeMeters) {
+    public static void paintSquareByAcousticNoise(MapView map, Polygon square,
+                                                       double acousticNoise, int mode,
+                                                       double squareSizeMeters) {
         if (map == null || square == null)
             return;
 
         int fillColor;
 
         // Determine the color based on the signal strength level
-        if (signalStrength <= POOR_SIGNAL_STRENGTH) {
+        if (acousticNoise <= VERY_LOUD) {
             fillColor = Color.argb(ALPHA_TRANSPARENT, 255, 0, 0); // Red with 40% transparency
-        } else if (signalStrength >= POOR_SIGNAL_STRENGTH &&
-                signalStrength <= AVERAGE_SIGNAL_STRENGTH) {
+        } else if (acousticNoise > VERY_LOUD && acousticNoise <= AVERAGE_NOISE) {
             fillColor = Color.argb(ALPHA_TRANSPARENT, 255, 255, 0); // Yellow with 40% transparency
         } else {
             fillColor = Color.argb(ALPHA_TRANSPARENT, 0, 255, 0); // Green with 40% transparency
@@ -50,10 +47,10 @@ public class WiFiSignalPainter {
         square.setStrokeWidth(2f);
         square.setFillColor(fillColor);
 
-        saveSquareToDatabase(square, fillColor, mode, map, squareSizeMeters, signalStrength);
+        saveSquareToDatabase(square, fillColor, mode, map, squareSizeMeters, acousticNoise);
         map.getOverlayManager().add(square);
         map.invalidate();
         // Save the square into the database
     }
-}
 
+}

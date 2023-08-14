@@ -13,8 +13,14 @@ public class Square {
     private int type;
     private double squareSize;
 
+    private long timestamp;
+
+    private double signalValue;
+
+
     public Square(double latitudeStart, double longitudeStart, double latitudeEnd,
-                  double longitudeEnd, int color, int type, double squareSize) {
+                  double longitudeEnd, int color, int type, double squareSize, long timestamp,
+                  double signalValue) {
         this.latitudeStart = latitudeStart;
         this.longitudeStart = longitudeStart;
         this.latitudeEnd = latitudeEnd;
@@ -51,6 +57,8 @@ public class Square {
         return type;
     }
     public double getSquareSize() { return squareSize; }
+    public long getTimestamp() { return timestamp ; }
+    public double getSignalValue() { return signalValue ; }
 
     //Setters
     public void setColor(int color) {
@@ -69,4 +77,6 @@ public class Square {
         this.type = type;
     }
     public void setSquareSize(double squareSize) { this.squareSize = squareSize; }
+    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
+    public void setSignalValue(double signalValue) { this.signalValue = signalValue; }
 }

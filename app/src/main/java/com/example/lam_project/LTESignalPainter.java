@@ -1,5 +1,7 @@
 package com.example.lam_project;
 
+import static com.example.lam_project.managers.DatabaseManager.saveSquareToDatabase;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
@@ -15,8 +17,8 @@ import org.osmdroid.views.overlay.Polygon;
 public class LTESignalPainter {
 
     // Signal strength levels
-    private static final int POOR_SIGNAL_STRENGTH = 1;
-    private static final int AVERAGE_SIGNAL_STRENGTH = 2;
+    private static final double POOR_SIGNAL_STRENGTH = 1.0;
+    private static final double AVERAGE_SIGNAL_STRENGTH = 3.0;
 
 
     private static final int ALPHA_TRANSPARENT = 100; // Adjust this value to control transparency
@@ -35,7 +37,8 @@ public class LTESignalPainter {
         // Determine the color based on the signal strength level
         if (signalStrength <= POOR_SIGNAL_STRENGTH) {
             fillColor = Color.argb(ALPHA_TRANSPARENT, 255, 0, 0); // Red with 40% transparency
-        } else if (signalStrength == AVERAGE_SIGNAL_STRENGTH) {
+        } else if (signalStrength >= POOR_SIGNAL_STRENGTH &&
+                signalStrength <= AVERAGE_SIGNAL_STRENGTH) {
             fillColor = Color.argb(ALPHA_TRANSPARENT, 255, 255, 0); // Yellow with 40% transparency
         } else {
             fillColor = Color.argb(ALPHA_TRANSPARENT, 0, 255, 0); // Green with 40% transparency
@@ -47,44 +50,10 @@ public class LTESignalPainter {
 
         // Create a custom diagonal pattern for the square
 
-        saveSquareToDatabase(square, fillColor, mode, map, squareSizeMeters);
+        saveSquareToDatabase(square, fillColor, mode, map, squareSizeMeters, signalStrength);
         map.getOverlayManager().add(square);
         map.invalidate();
         // Save the square into the database
     }
 
-    //This will be detatched
-    private static void saveSquareToDatabase(Polygon square, int color, int mode, MapView map,
-                                             double squareSizeMeters) {
-        // Get the latitude and longitude of the square
-        double latitudeStart = square.getPoints().get(0).getLatitude();
-        double longitudeStart = square.getPoints().get(0).getLongitude();
-        double latitudeEnd = square.getPoints().get(2).getLatitude();
-        double longitudeEnd = square.getPoints().get(2).getLongitude();
-
-        // Create a new Square object
-        Square squareObject = new Square(latitudeStart, longitudeStart, latitudeEnd,
-                longitudeEnd, color, mode, squareSizeMeters);
-
-        // Get a reference to the database helper
-        Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
-        DatabaseManager dbHelper = new DatabaseManager(context);
-
-        // Insert the square into the database
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(dbHelper.COLUMN_LATITUDE_START, squareObject.getLatitudeStart());
-        values.put(dbHelper.COLUMN_LONGITUDE_START, squareObject.getLongitudeStart());
-        values.put(dbHelper.COLUMN_LATITUDE_END, squareObject.getLatitudeEnd());
-        values.put(dbHelper.COLUMN_LONGITUDE_END, squareObject.getLongitudeEnd());
-        values.put(dbHelper.COLUMN_COLOR, squareObject.getColor());
-        values.put(dbHelper.COLUMN_TYPE, squareObject.getType());
-        values.put(dbHelper.COLUMN_SIZE, squareObject.getSquareSize());
-        long id = db.insert(dbHelper.TABLE_NAME, null, values);
-        // Set the ID of the square object after insertion, maybe removing this later?
-        squareObject.setId(id);
-        Log.d("DB check", "DB ENTRY CHECK");
-        db.close();
-        dbHelper.close();
-    }
 }

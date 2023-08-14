@@ -19,7 +19,7 @@ public class WifiSignalManager {
         //apparently there's no (easy, at least) way to get a simulation for the signal like we
         //did with LTE signal.
         //Log.d("RSSI", "RSSI: "+wifiInfo.getRssi());
-        int numberOfLevels = 3;
+        int numberOfLevels = 4;
         int level = WifiManager.calculateSignalLevel(wifiInfo.getRssi(), numberOfLevels);
         return level; // Returns the WiFi signal strength in dBm
     }

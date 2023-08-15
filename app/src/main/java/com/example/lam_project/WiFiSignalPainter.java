@@ -29,7 +29,7 @@ public class WiFiSignalPainter {
 
     // Method to paint the square based on the LTE signal strength
     public static void paintSquareByWiFiSignalStrength(MapView map, Polygon square,
-                                                      int signalStrength, int mode,
+                                                      double signalStrength, int mode,
                                                       double squareSizeMeters) {
         if (map == null || square == null)
             return;

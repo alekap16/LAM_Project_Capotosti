@@ -21,9 +21,9 @@ import java.util.List;
 //at first look easy to complete for other use cases
 public class GridCreator {
     private static double currentNoiseLevel = 0.0;
-    private static int currentLTESignalStrength = 0; // Variable to store the current LTE signal strength
-private static int currentWiFiSignalLevel = 0; // Store the wifi signal expressed in level.
-
+    private static double currentLTESignalStrength = 0.0; // Variable to store the current LTE signal strength
+private static double currentWiFiSignalLevel = 0.0; // Store the wifi signal expressed in level.
+private static double currentAcousticNoise = 0.0;
     //Create each unique ID for squares, needs for overlap prevention
     private static final List<Polygon> existingSquares = new ArrayList<>();
     public GridCreator() {
@@ -73,8 +73,9 @@ private static int currentWiFiSignalLevel = 0; // Store the wifi signal expresse
             return;
 
         List<Square> existingSquares = retrieveSquares(mapView, mode, squareSizeMeters);
-        if (!doesSquareOverlap(existingSquares, latitude, longitude, squareSizeMeters, mode)) {
-            Log.d("TEST", "test");
+        if (!doesSquareOverlap(existingSquares, latitude, longitude, squareSizeMeters,
+                mode, mapView)) {
+
             double latitudeDiff = metersToLatitude(squareSizeMeters);
             double longitudeDiff = metersToLongitude(squareSizeMeters, latitude);
 
@@ -95,7 +96,7 @@ private static int currentWiFiSignalLevel = 0; // Store the wifi signal expresse
             square.setPoints(squarePoints);
             //mapView.getOverlayManager().add(square);
             //existingSquares.add(square);
-//mapView.invalidate();
+            //mapView.invalidate();
             if (mode == 1) {
                 // Store the current LTE signal strength from SignalStrengthManager
                 SignalStrengthManager signalStrengthManager = new
@@ -104,8 +105,6 @@ private static int currentWiFiSignalLevel = 0; // Store the wifi signal expresse
 
                     // Store the current LTE signal strength
                     currentLTESignalStrength = signalStrength;
-
-                    Log.d("SignalStrength", "LTE Signal Strength: " + signalStrength);
                     signalStrengthManager.stopSignalStrengthUpdates();
                 });
 
@@ -121,17 +120,15 @@ private static int currentWiFiSignalLevel = 0; // Store the wifi signal expresse
                // Log.d("Wifi log", "Wifi signal Dbm"+wifiSignalManager.getWifiSignalStrength());
             } else {
                     AcousticNoiseManager mNoiseManager = new AcousticNoiseManager();
-
                     mNoiseManager.startRecording(mapView.getContext(), noiseLevel -> {
                         currentNoiseLevel = noiseLevel;
                         Log.d("NoiseLevel", "Current noise level: " + noiseLevel + " dB");
+                        mNoiseManager.stopRecording();
                     });
 
                     AcousticNoisePainter.paintSquareByAcousticNoise(mapView, square,
                             currentNoiseLevel, mode, squareSizeMeters);
                 }
-
-
         }
     }
 
@@ -150,26 +147,52 @@ private static int currentWiFiSignalLevel = 0; // Store the wifi signal expresse
     // Helper method that chjecks if overlaps are a thing
     private static boolean doesSquareOverlap(List<Square> existingSquares,
                                              double latitude, double longitude,
-                                             double squareSizeMeters, int mode) {
+                                             double squareSizeMeters, int mode,
+                                             MapView mapView) {
 
         for (Square square : existingSquares) {
             double latStart = square.getLatitudeStart();
             double latEnd = square.getLatitudeEnd();
             double lonStart = square.getLongitudeStart();
             double lonEnd = square.getLongitudeEnd();
-
             // Check if coordinates collides with the squares already painted for overlaps
             for (double lat = latitude - 0.5 * metersToLatitude(squareSizeMeters); lat <= latitude + 0.5 * metersToLatitude(squareSizeMeters); lat += 0.5 * metersToLatitude(squareSizeMeters)) {
                 for (double lon = longitude - 0.5 * metersToLongitude(squareSizeMeters, latitude); lon <= longitude + 0.5 * metersToLongitude(squareSizeMeters, latitude); lon += 0.5 * metersToLongitude(squareSizeMeters, latitude)) {
                     if (lat >= latStart && lat <= latEnd && lon >= lonStart && lon <= lonEnd) {
+                        if (mode == 1) {
+                            // Store the current LTE signal strength from SignalStrengthManager
+                            SignalStrengthManager signalStrengthManager = new
+                                    SignalStrengthManager(mapView.getContext());
+                            signalStrengthManager.requestSignalStrengthUpdates(signalStrength -> {
 
+                                // Store the current LTE signal strength
+                                currentLTESignalStrength = signalStrength;
+                                signalStrengthManager.stopSignalStrengthUpdates();
+                            });
+
+                            // Paint the square based on the current LTE signal strength
+                            DatabaseManager.updateSquare(square, currentLTESignalStrength, mapView);
+                        }
+                        else if(mode == 2) {
+                            WifiSignalManager wifiSignalManager = new WifiSignalManager(mapView.getContext());
+                            currentWiFiSignalLevel = wifiSignalManager.getWifiSignalStrength();
+                            DatabaseManager.updateSquare(square, currentWiFiSignalLevel, mapView);
+                            // Log.d("Wifi log", "Wifi signal Dbm"+wifiSignalManager.getWifiSignalStrength());
+                        } else {
+                            AcousticNoiseManager mNoiseManager = new AcousticNoiseManager();
+                            mNoiseManager.startRecording(mapView.getContext(), noiseLevel -> {
+                                currentNoiseLevel = noiseLevel;
+                                mNoiseManager.stopRecording();
+                            });
+                            DatabaseManager.updateSquare(square, currentNoiseLevel, mapView);
+                        }
+                        return true;
 //                        Log.d("lat", "lat: "+lat);
 //                        Log.d("latStart", "latStart: "+latStart);
 //                        Log.d("latEnd", "latEnd: "+latEnd);
 //                        Log.d("lon", "lon: "+lon);
 //                        Log.d("lonStart", "lonStart: "+lonStart);
 //                        Log.d("lonEnd", "lonEnd: "+lonEnd);
-                        return true; //overlap so don't print
                     }
                 }
             }

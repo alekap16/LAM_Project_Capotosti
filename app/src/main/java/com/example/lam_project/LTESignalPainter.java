@@ -27,7 +27,7 @@ public class LTESignalPainter {
 
     // Method to paint the square based on the LTE signal strength
     public static void paintSquareByLTESignalStrength(MapView map, Polygon square,
-                                                      int signalStrength, int mode,
+                                                      double signalStrength, int mode,
                                                       double squareSizeMeters) {
         if (map == null || square == null)
             return;

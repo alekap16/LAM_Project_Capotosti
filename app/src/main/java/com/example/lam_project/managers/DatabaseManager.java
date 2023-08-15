@@ -7,6 +7,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.example.lam_project.AcousticNoisePainter;
+import com.example.lam_project.LTESignalPainter;
+import com.example.lam_project.UpdatedSquarePainter;
+import com.example.lam_project.WiFiSignalPainter;
 import com.example.lam_project.model.Square;
 
 import org.osmdroid.views.MapView;
@@ -31,6 +35,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
     public static final String COLUMN_SIZE = "size";
     public static final String COLUMN_TIMESTAMP = "timestamp";
     public static final String COLUMN_SIGNAL_VALUE = "signalValue";
+    public static final String COLUMN_COUNT = "count";
 
     SQLiteDatabase db = getReadableDatabase();
     private static final String CREATE_SQUARE_TABLE =
@@ -44,6 +49,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
                     COLUMN_SIZE + " REAL NOT NULL, " +
                     COLUMN_TIMESTAMP + " REAL NOT NULL, " +
                     COLUMN_SIGNAL_VALUE + " REAL NOT NULL, " +
+                    COLUMN_COUNT + " REAL NOT NULL, " +
                     COLUMN_COLOR + " INTEGER NOT NULL)";
 
 
@@ -62,10 +68,10 @@ public class DatabaseManager extends SQLiteOpenHelper {
                 double squareSize = cursor.getDouble(cursor.getColumnIndex(COLUMN_SIZE));
                 long timestamp = cursor.getLong(cursor.getColumnIndex(COLUMN_TIMESTAMP));
                 double signalValue = cursor.getDouble(cursor.getColumnIndex(COLUMN_SIGNAL_VALUE));
-
+                int count = cursor.getInt(cursor.getColumnIndex(COLUMN_COUNT));
 
                 squares.add(new Square(latitudeStart, longitudeStart, latitudeEnd, longitudeEnd,
-                        color, type, squareSize, timestamp, signalValue));
+                        color, type, squareSize, timestamp, signalValue, count));
             } while (cursor.moveToNext());
         }
 
@@ -102,9 +108,10 @@ public class DatabaseManager extends SQLiteOpenHelper {
         double latitudeEnd = square.getPoints().get(2).getLatitude();
         double longitudeEnd = square.getPoints().get(2).getLongitude();
         long timestamp = 0;
+        int count = 1;
         // Create a new Square object
         Square squareObject = new Square(latitudeStart, longitudeStart, latitudeEnd,
-                longitudeEnd, color, mode, squareSizeMeters, timestamp, signalValue);
+                longitudeEnd, color, mode, squareSizeMeters, timestamp, signalValue, count);
 
         long currentTimestamp = System.currentTimeMillis() / 1000; // Convert to seconds
         squareObject.setTimestamp(currentTimestamp);
@@ -125,11 +132,61 @@ public class DatabaseManager extends SQLiteOpenHelper {
         values.put(dbHelper.COLUMN_SIZE, squareObject.getSquareSize());
         values.put(dbHelper.COLUMN_TIMESTAMP, squareObject.getTimestamp());
         values.put(dbHelper.COLUMN_SIGNAL_VALUE, squareObject.getSignalValue());
+        values.put(dbHelper.COLUMN_COUNT, squareObject.getCount());
         long id = db.insert(dbHelper.TABLE_NAME, null, values);
         // Set the ID of the square object after insertion, maybe removing this later?
         squareObject.setId(id);
         db.close();
         dbHelper.close();
+    }
+
+    public static void updateSquare(Square square, double signalValue, MapView map) {
+        Square updatedSquare = new Square(square.getLatitudeStart(), square.getLongitudeStart(),
+                square.getLatitudeEnd(), square.getLongitudeEnd(), square.getColor(),
+                square.getType(), square.getSquareSize(), square.getTimestamp(), square.getSignalValue(),
+                square.getCount());
+        updatedSquare.setId(square.getId());
+        updatedSquare.setSignalValue((updatedSquare.getSignalValue()+signalValue) /
+                updatedSquare.getCount());
+        int fillColor = UpdatedSquarePainter.paintSquare(updatedSquare.getType(),
+                updatedSquare.getSignalValue());
+        updatedSquare.setColor(fillColor);
+        deleteSquare(updatedSquare.getId(), map);
+        long currentTimestamp = System.currentTimeMillis() / 1000; // Convert to seconds
+        updatedSquare.setTimestamp(currentTimestamp);
+        Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
+        DatabaseManager dbHelper = new DatabaseManager(context);
+
+        // Insert the square into the database
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_ID, updatedSquare.getId());
+        values.put(dbHelper.COLUMN_LATITUDE_START, updatedSquare.getLatitudeStart());
+        values.put(COLUMN_LONGITUDE_START, updatedSquare.getLongitudeStart());
+        values.put(COLUMN_LATITUDE_END, updatedSquare.getLatitudeEnd());
+        values.put(COLUMN_LONGITUDE_END, updatedSquare.getLongitudeEnd());
+        values.put(COLUMN_COLOR, updatedSquare.getColor());
+        values.put(COLUMN_TYPE, updatedSquare.getType());
+        values.put(COLUMN_SIZE, updatedSquare.getSquareSize());
+        values.put(COLUMN_TIMESTAMP, updatedSquare.getTimestamp());
+        values.put(COLUMN_SIGNAL_VALUE, updatedSquare.getSignalValue());
+        values.put(COLUMN_COUNT, updatedSquare.getCount()+1);
+        db.insert(TABLE_NAME, null, values);
+
+        dbHelper.close();
+        db.close();
+
+    }
+
+    public static void deleteSquare(long id, MapView map){
+        Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
+        DatabaseManager dbHelper = new DatabaseManager(context);
+
+        // Insert the square into the database
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        db.delete(TABLE_NAME,  "_id = ?", new String[]{String.valueOf(id)});
+        dbHelper.close();
+        db.close();
     }
 }
 

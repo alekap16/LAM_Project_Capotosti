@@ -65,7 +65,7 @@ private static double currentAcousticNoise = 0.0;
             PainterExistingSquares.paintExistingSquares(mapView, square, existingSquare.getColor());
             // Store the current LTE signal strength from SignalStrengthManager
 
-            mapView.invalidate();
+            //mapView.invalidate();
     }
     public static void createSquare(MapView mapView, double latitude, double longitude,
                                     double squareSizeMeters, int mode) {

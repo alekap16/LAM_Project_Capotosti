@@ -19,9 +19,10 @@ public class Square {
     private int count;
 
 
-    public Square(double latitudeStart, double longitudeStart, double latitudeEnd,
+    public Square(long id, double latitudeStart, double longitudeStart, double latitudeEnd,
                   double longitudeEnd, int color, int type, double squareSize, long timestamp,
                   double signalValue, int count) {
+        this.id = id;
         this.latitudeStart = latitudeStart;
         this.longitudeStart = longitudeStart;
         this.latitudeEnd = latitudeEnd;

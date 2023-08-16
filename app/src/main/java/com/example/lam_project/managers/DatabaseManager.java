@@ -59,6 +59,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
         Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
         if (cursor.moveToFirst()) {
             do {
+                long id = cursor.getLong(cursor.getColumnIndex(COLUMN_ID));
                 double latitudeStart = cursor.getDouble(cursor.getColumnIndex(COLUMN_LATITUDE_START));
                 double longitudeStart = cursor.getDouble(cursor.getColumnIndex(COLUMN_LONGITUDE_START));
                 double latitudeEnd = cursor.getDouble(cursor.getColumnIndex(COLUMN_LATITUDE_END));
@@ -70,7 +71,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
                 double signalValue = cursor.getDouble(cursor.getColumnIndex(COLUMN_SIGNAL_VALUE));
                 int count = cursor.getInt(cursor.getColumnIndex(COLUMN_COUNT));
 
-                squares.add(new Square(latitudeStart, longitudeStart, latitudeEnd, longitudeEnd,
+                squares.add(new Square(id, latitudeStart, longitudeStart, latitudeEnd, longitudeEnd,
                         color, type, squareSize, timestamp, signalValue, count));
             } while (cursor.moveToNext());
         }
@@ -103,6 +104,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
     public static void saveSquareToDatabase(Polygon square, int color, int mode, MapView map,
                                             double squareSizeMeters, double signalValue) {
         // Get the latitude and longitude of the square
+        long id = 0;
         double latitudeStart = square.getPoints().get(0).getLatitude();
         double longitudeStart = square.getPoints().get(0).getLongitude();
         double latitudeEnd = square.getPoints().get(2).getLatitude();
@@ -110,7 +112,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
         long timestamp = 0;
         int count = 1;
         // Create a new Square object
-        Square squareObject = new Square(latitudeStart, longitudeStart, latitudeEnd,
+        Square squareObject = new Square(id, latitudeStart, longitudeStart, latitudeEnd,
                 longitudeEnd, color, mode, squareSizeMeters, timestamp, signalValue, count);
 
         long currentTimestamp = System.currentTimeMillis() / 1000; // Convert to seconds
@@ -133,7 +135,8 @@ public class DatabaseManager extends SQLiteOpenHelper {
         values.put(dbHelper.COLUMN_TIMESTAMP, squareObject.getTimestamp());
         values.put(dbHelper.COLUMN_SIGNAL_VALUE, squareObject.getSignalValue());
         values.put(dbHelper.COLUMN_COUNT, squareObject.getCount());
-        long id = db.insert(dbHelper.TABLE_NAME, null, values);
+        id = db.insert(dbHelper.TABLE_NAME, null, values);
+        Log.d("ID INSERT", "ID: "+id);
         // Set the ID of the square object after insertion, maybe removing this later?
         squareObject.setId(id);
         db.close();
@@ -141,7 +144,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
     }
 
     public static void updateSquare(Square square, double signalValue, MapView map) {
-        Square updatedSquare = new Square(square.getLatitudeStart(), square.getLongitudeStart(),
+        Square updatedSquare = new Square(square.getId(), square.getLatitudeStart(), square.getLongitudeStart(),
                 square.getLatitudeEnd(), square.getLongitudeEnd(), square.getColor(),
                 square.getType(), square.getSquareSize(), square.getTimestamp(), square.getSignalValue(),
                 square.getCount());
@@ -151,6 +154,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
         int fillColor = UpdatedSquarePainter.paintSquare(updatedSquare.getType(),
                 updatedSquare.getSignalValue());
         updatedSquare.setColor(fillColor);
+        Log.d("ELIMINA QUESTO", "ID: "+updatedSquare.getId());
         deleteSquare(updatedSquare.getId(), map);
         long currentTimestamp = System.currentTimeMillis() / 1000; // Convert to seconds
         updatedSquare.setTimestamp(currentTimestamp);
@@ -172,7 +176,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
         values.put(COLUMN_SIGNAL_VALUE, updatedSquare.getSignalValue());
         values.put(COLUMN_COUNT, updatedSquare.getCount()+1);
         db.insert(TABLE_NAME, null, values);
-
+        Log.d("AGGIUNGI", "CON ID: " + updatedSquare.getId());
         dbHelper.close();
         db.close();
 
@@ -185,6 +189,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
         // Insert the square into the database
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.delete(TABLE_NAME,  "_id = ?", new String[]{String.valueOf(id)});
+        Log.d("DELETE", "DELETE WITH ID: "+id);
         dbHelper.close();
         db.close();
     }

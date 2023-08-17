@@ -108,6 +108,7 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //Questo lo devo togliere
         signalStrengthManager = new SignalStrengthManager(this);
 
         signalStrengthManager.requestSignalStrengthUpdates(new SignalStrengthManager.OnSignalStrengthChangeListener() {
@@ -161,6 +162,7 @@ public class MainActivity extends Activity {
 
         map.setTileSource(TileSourceFactory.MAPNIK);
         Button toggleModeButton = findViewById(R.id.btn_toggle_mode);
+
         //this name is dumb because it's not actually on Button change (in this instance);
         //but It does the same static thing aka printing the squares in db so no need to change
         printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);

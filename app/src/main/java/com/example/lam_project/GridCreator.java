@@ -1,6 +1,8 @@
 package com.example.lam_project;
 
 
+import android.os.Handler;
+import android.provider.ContactsContract;
 import android.util.Log;
 
 import com.example.lam_project.managers.AcousticNoiseManager;
@@ -9,6 +11,7 @@ import com.example.lam_project.managers.SettingsManager;
 import com.example.lam_project.managers.SignalStrengthManager;
 import com.example.lam_project.managers.WifiSignalManager;
 import com.example.lam_project.model.Square;
+import com.example.lam_project.utils.Utils;
 
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
@@ -21,6 +24,7 @@ import java.util.List;
 //so i can re-use the code for 100m squares and 1km. as for now I get one done since this is
 //at first look easy to complete for other use cases
 public class GridCreator {
+    private static int MILLISECONDS_EXPIRY_REFRESH = 1000;
     private static double currentNoiseLevel = 0.0;
     private static double currentLTESignalStrength = 0.0; // Variable to store the current LTE signal strength
 private static double currentWiFiSignalLevel = 0.0; // Store the wifi signal expressed in level.
@@ -31,11 +35,37 @@ private static double currentAcousticNoise = 0.0;
         // No need for any constructor parameters in this case
     }
     // Method to create and display the grid overlay
+    public static void expiredSquares(MapView map, int mode, double squareSizeMeters) {
+        SettingsManager settingsManager = new SettingsManager(map.getContext());
+        Handler handler = new Handler();
+        Runnable timeCheckerRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    DatabaseManager databaseManager = new DatabaseManager(map.getContext());
+                    List<Square> squares = databaseManager.getAllSquares();
+                    for (Square squareExpired : squares ) {
+                        if (Utils.hasTimeExpired(squareExpired.getTimestamp(), settingsManager.getSelectedMinutes())) {
+                            long id = squareExpired.getId();
+                            DatabaseManager.deleteSquare(id, map);
+                        }
+                    }
+                    databaseManager.close();
+                    List<Square> printNonExpiredSquares = retrieveSquares(map, mode, squareSizeMeters);
+                    for (Square square : printNonExpiredSquares) {
+                        createGridExistingSquares(map, square);
+                    }
+                    // Define MILLISECONDS_EXPIRY_REFRESH in milliseconds
+                    handler.postDelayed(this, MILLISECONDS_EXPIRY_REFRESH); }
+            };
+            handler.post(timeCheckerRunnable);
+
+    }
     public static List<Square> retrieveSquares(MapView map,  int mode, double squareSizeMeters) {
         DatabaseManager databaseManager = new DatabaseManager(map.getContext());
         List<Square> squares = databaseManager.getAllSquares();
         List<Square> filteredSquares = new ArrayList<>();
         for (Square square : squares) {
+
             if (square.getType() == mode && square.getSquareSize() == squareSizeMeters ) {
                 filteredSquares.add(square);
             }

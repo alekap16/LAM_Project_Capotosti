@@ -148,38 +148,41 @@ public class DatabaseManager extends SQLiteOpenHelper {
                 square.getLatitudeEnd(), square.getLongitudeEnd(), square.getColor(),
                 square.getType(), square.getSquareSize(), square.getTimestamp(), square.getSignalValue(),
                 square.getCount());
-        updatedSquare.setId(square.getId());
-        updatedSquare.setSignalValue((updatedSquare.getSignalValue()+signalValue) /
-                updatedSquare.getCount());
-        int fillColor = UpdatedSquarePainter.paintSquare(updatedSquare.getType(),
-                updatedSquare.getSignalValue());
+        SettingsManager settingsManager = new SettingsManager(map.getContext());
+        if(updatedSquare.getCount() < settingsManager.getSelectedMeasurements()){
+                    updatedSquare.setId(square.getId());
+        updatedSquare.setSignalValue((updatedSquare.getSignalValue()+signalValue)/
+                    updatedSquare.getCount());
+            int fillColor = UpdatedSquarePainter.paintSquare(updatedSquare.getType(),
+                    updatedSquare.getSignalValue());
         updatedSquare.setColor(fillColor);
-        Log.d("ELIMINA QUESTO", "ID: "+updatedSquare.getId());
-        deleteSquare(updatedSquare.getId(), map);
-        long currentTimestamp = System.currentTimeMillis() / 1000; // Convert to seconds
-        updatedSquare.setTimestamp(currentTimestamp);
-        Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
-        DatabaseManager dbHelper = new DatabaseManager(context);
+        Log.d("ELIMINA QUESTO","ID: "+updatedSquare.getId());
 
-        // Insert the square into the database
-        SQLiteDatabase db = dbHelper.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_ID, updatedSquare.getId());
-        values.put(dbHelper.COLUMN_LATITUDE_START, updatedSquare.getLatitudeStart());
-        values.put(COLUMN_LONGITUDE_START, updatedSquare.getLongitudeStart());
-        values.put(COLUMN_LATITUDE_END, updatedSquare.getLatitudeEnd());
-        values.put(COLUMN_LONGITUDE_END, updatedSquare.getLongitudeEnd());
-        values.put(COLUMN_COLOR, updatedSquare.getColor());
-        values.put(COLUMN_TYPE, updatedSquare.getType());
-        values.put(COLUMN_SIZE, updatedSquare.getSquareSize());
-        values.put(COLUMN_TIMESTAMP, updatedSquare.getTimestamp());
-        values.put(COLUMN_SIGNAL_VALUE, updatedSquare.getSignalValue());
-        values.put(COLUMN_COUNT, updatedSquare.getCount()+1);
-        db.insert(TABLE_NAME, null, values);
-        Log.d("AGGIUNGI", "CON ID: " + updatedSquare.getId());
+            deleteSquare(updatedSquare.getId(),map);
+            long currentTimestamp = System.currentTimeMillis() / 1000; // Convert to seconds
+        updatedSquare.setTimestamp(currentTimestamp);
+            Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
+            DatabaseManager dbHelper = new DatabaseManager(context);
+
+            // Insert the square into the database
+            SQLiteDatabase db = dbHelper.getWritableDatabase();
+            ContentValues values = new ContentValues();
+        values.put(COLUMN_ID,updatedSquare.getId());
+        values.put(dbHelper.COLUMN_LATITUDE_START,updatedSquare.getLatitudeStart());
+        values.put(COLUMN_LONGITUDE_START,updatedSquare.getLongitudeStart());
+        values.put(COLUMN_LATITUDE_END,updatedSquare.getLatitudeEnd());
+        values.put(COLUMN_LONGITUDE_END,updatedSquare.getLongitudeEnd());
+        values.put(COLUMN_COLOR,updatedSquare.getColor());
+        values.put(COLUMN_TYPE,updatedSquare.getType());
+        values.put(COLUMN_SIZE,updatedSquare.getSquareSize());
+        values.put(COLUMN_TIMESTAMP,updatedSquare.getTimestamp());
+        values.put(COLUMN_SIGNAL_VALUE,updatedSquare.getSignalValue());
+        values.put(COLUMN_COUNT,updatedSquare.getCount()+1);
+        db.insert(TABLE_NAME,null,values);
+        Log.d("AGGIUNGI","CON ID: "+updatedSquare.getId());
         dbHelper.close();
         db.close();
-
+        }
     }
 
     public static void deleteSquare(long id, MapView map){

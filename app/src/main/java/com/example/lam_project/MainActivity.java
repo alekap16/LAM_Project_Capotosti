@@ -171,6 +171,7 @@ public class MainActivity extends Activity {
         toggleDistanceButton.setOnClickListener(this::toggleDistance);
         map.setClickable(false);
         map.setMultiTouchControls(false);
+        GridCreator.expiredSquares(map, currentMode, squareSizeMeters);
         startLocationUpdates();
 
         /*

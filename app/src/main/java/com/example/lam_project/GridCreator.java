@@ -41,6 +41,7 @@ private static double currentAcousticNoise = 0.0;
         Runnable timeCheckerRunnable = new Runnable() {
                 @Override
                 public void run() {
+                    Log.d("RUN EXPIRED CHECK", "IM LISTENING AND RUNNING");
                     DatabaseManager databaseManager = new DatabaseManager(map.getContext());
                     List<Square> squares = databaseManager.getAllSquares();
                     for (Square squareExpired : squares ) {

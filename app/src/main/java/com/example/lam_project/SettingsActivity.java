@@ -13,7 +13,6 @@ import android.widget.TextView;
 import com.example.lam_project.managers.SettingsManager;
 
 public class SettingsActivity extends Activity {
-
     private Switch notificationSwitch;
     private SeekBar minutesSeekBar;
     private SeekBar measurementsSeekBar;

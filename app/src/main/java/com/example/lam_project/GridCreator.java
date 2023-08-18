@@ -24,7 +24,7 @@ import java.util.List;
 //so i can re-use the code for 100m squares and 1km. as for now I get one done since this is
 //at first look easy to complete for other use cases
 public class GridCreator {
-    private static int MILLISECONDS_EXPIRY_REFRESH = 1000;
+    private static int MILLISECONDS_EXPIRY_REFRESH = 10000;
     private static double currentNoiseLevel = 0.0;
     private static double currentLTESignalStrength = 0.0; // Variable to store the current LTE signal strength
 private static double currentWiFiSignalLevel = 0.0; // Store the wifi signal expressed in level.
@@ -41,20 +41,30 @@ private static double currentAcousticNoise = 0.0;
         Runnable timeCheckerRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    Log.d("RUN EXPIRED CHECK", "IM LISTENING AND RUNNING");
+//                    Log.d("RUN EXPIRED CHECK", "IM LISTENING AND RUNNING");
                     DatabaseManager databaseManager = new DatabaseManager(map.getContext());
                     List<Square> squares = databaseManager.getAllSquares();
                     for (Square squareExpired : squares ) {
+                        Log.d("Square exp", "Square exp: "+squareExpired.getTimestamp());
                         if (Utils.hasTimeExpired(squareExpired.getTimestamp(), settingsManager.getSelectedMinutes())) {
+//                            Log.d("Square Timestamp", "Square timestamp: "+squareExpired.getTimestamp());
+//                            Log.d("current Timestamp", "current timestamp: "+System.currentTimeMillis());
                             long id = squareExpired.getId();
                             DatabaseManager.deleteSquare(id, map);
+                            Log.d("EXPIRED", "I am expired" + id);
                         }
                     }
                     databaseManager.close();
-                    List<Square> printNonExpiredSquares = retrieveSquares(map, mode, squareSizeMeters);
+                    map.getOverlays().clear();
+                    map.invalidate();
+                    //Istanzio ancora un db manager così garantisco che le istanze siano chiuse e aperte
+                    DatabaseManager databaseManager2 = new DatabaseManager(map.getContext());
+                    List<Square> printNonExpiredSquares = databaseManager2.getAllSquares();
+                    printNonExpiredSquares = retrieveSquares(map, mode, squareSizeMeters);
                     for (Square square : printNonExpiredSquares) {
                         createGridExistingSquares(map, square);
                     }
+//                    Log.d("Size", "Size list: "+printNonExpiredSquares.size());
                     // Define MILLISECONDS_EXPIRY_REFRESH in milliseconds
                     handler.postDelayed(this, MILLISECONDS_EXPIRY_REFRESH); }
             };
@@ -82,21 +92,20 @@ private static double currentAcousticNoise = 0.0;
         double longitudeStart = existingSquare.getLongitudeStart();
         double latitudeEnd = existingSquare.getLatitudeEnd();
         double longitudeEnd = existingSquare.getLongitudeEnd();
-
             // Create the square around the given coordinates
-            List<GeoPoint> squarePoints = new ArrayList<>();
-            squarePoints.add(new GeoPoint(latitudeStart, longitudeStart));
-            squarePoints.add(new GeoPoint(latitudeEnd, longitudeStart));
-            squarePoints.add(new GeoPoint(latitudeEnd, longitudeEnd));
-            squarePoints.add(new GeoPoint(latitudeStart, longitudeEnd));
+        List<GeoPoint> squarePoints = new ArrayList<>();
+        squarePoints.add(new GeoPoint(latitudeStart, longitudeStart));
+        squarePoints.add(new GeoPoint(latitudeEnd, longitudeStart));
+        squarePoints.add(new GeoPoint(latitudeEnd, longitudeEnd));
+        squarePoints.add(new GeoPoint(latitudeStart, longitudeEnd));
 
-            Polygon square = new Polygon(mapView);
-            square.setPoints(squarePoints);
+        Polygon square = new Polygon(mapView);
+        square.setPoints(squarePoints);
 
-            PainterExistingSquares.paintExistingSquares(mapView, square, existingSquare.getColor());
-            // Store the current LTE signal strength from SignalStrengthManager
+        PainterExistingSquares.paintExistingSquares(mapView, square, existingSquare.getColor());
+        // Store the current LTE signal strength from SignalStrengthManager
 
-            //mapView.invalidate();
+        //mapView.invalidate();
     }
     public static void createSquare(MapView mapView, double latitude, double longitude,
                                     double squareSizeMeters, int mode) {

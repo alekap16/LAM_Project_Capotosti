@@ -115,7 +115,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
         Square squareObject = new Square(id, latitudeStart, longitudeStart, latitudeEnd,
                 longitudeEnd, color, mode, squareSizeMeters, timestamp, signalValue, count);
 
-        long currentTimestamp = System.currentTimeMillis() / 1000; // Convert to seconds
+        long currentTimestamp = System.currentTimeMillis(); // Convert to seconds
         squareObject.setTimestamp(currentTimestamp);
         Log.d("TIMESTAMP SQUARE", "Timestamp: "+squareObject.getTimestamp());
         // Get a reference to the database helper
@@ -159,7 +159,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
         Log.d("ELIMINA QUESTO","ID: "+updatedSquare.getId());
 
             deleteSquare(updatedSquare.getId(),map);
-            long currentTimestamp = System.currentTimeMillis() / 1000; // Convert to seconds
+            long currentTimestamp = System.currentTimeMillis(); // Convert to seconds
         updatedSquare.setTimestamp(currentTimestamp);
             Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
             DatabaseManager dbHelper = new DatabaseManager(context);
@@ -168,7 +168,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
             SQLiteDatabase db = dbHelper.getWritableDatabase();
             ContentValues values = new ContentValues();
         values.put(COLUMN_ID,updatedSquare.getId());
-        values.put(dbHelper.COLUMN_LATITUDE_START,updatedSquare.getLatitudeStart());
+        values.put(COLUMN_LATITUDE_START,updatedSquare.getLatitudeStart());
         values.put(COLUMN_LONGITUDE_START,updatedSquare.getLongitudeStart());
         values.put(COLUMN_LATITUDE_END,updatedSquare.getLatitudeEnd());
         values.put(COLUMN_LONGITUDE_END,updatedSquare.getLongitudeEnd());

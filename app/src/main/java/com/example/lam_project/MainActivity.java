@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -56,6 +57,9 @@ public class MainActivity extends Activity {
     private int currentMode = MODE_LTE;
     private boolean isButtonRangesClickable = true;
     private boolean isButtonModeClickable = true;
+
+    private LocationManager locationManager;
+
     public void printDatabaseValues() {
         // Get a reference to the database helper
         Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
@@ -104,6 +108,7 @@ public class MainActivity extends Activity {
             }
         }
     }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -114,13 +119,13 @@ public class MainActivity extends Activity {
         signalStrengthManager.requestSignalStrengthUpdates(new SignalStrengthManager.OnSignalStrengthChangeListener() {
             @Override
             public void onSignalStrengthChanged(int signalStrength) {
-               // Log.d("SignalStrength", "LTE Signal Strength: " + signalStrength);
+                // Log.d("SignalStrength", "LTE Signal Strength: " + signalStrength);
             }
         });
         // Initialize osmdroid configuration (needed for caching, etc.)
         String osmCachePath = getFilesDir().getAbsolutePath() + "/osmdroid";
         Configuration.getInstance().load(getApplicationContext(),
-        androidx.preference.PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
+                androidx.preference.PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         Configuration.getInstance().setOsmdroidBasePath(new File(osmCachePath));
         Configuration.getInstance().setOsmdroidTileCache(new File(osmCachePath));
 
@@ -162,13 +167,14 @@ public class MainActivity extends Activity {
 
         map.setTileSource(TileSourceFactory.MAPNIK);
         Button toggleModeButton = findViewById(R.id.btn_toggle_mode);
-
+        Button manualScanButton = findViewById(R.id.btn_manual_scan);
         //this name is dumb because it's not actually on Button change (in this instance);
         //but It does the same static thing aka printing the squares in db so no need to change
         printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
         toggleModeButton.setOnClickListener(this::toggleMode);
         Button toggleDistanceButton = findViewById(R.id.btn_toggle_distances);
         toggleDistanceButton.setOnClickListener(this::toggleDistance);
+        manualScanButton.setOnClickListener(this::manualScan);
         map.setClickable(false);
         map.setMultiTouchControls(false);
         GridCreator.expiredSquares(map, currentMode, squareSizeMeters);
@@ -179,6 +185,54 @@ public class MainActivity extends Activity {
         mapController.setCenter(startPoint);*/
 
     }
+
+    private void manualScan(View view) {
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, null);
+    }
+
+    private final LocationListener locationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(@NonNull Location location) {
+            // Update the latitude and longitude variables
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
+
+            IMapController mapController = map.getController();
+            // Create a GeoPoint using the latitude and longitude variables
+            GeoPoint startPoint = new GeoPoint(latitude, longitude);
+            // Use the GeoPoint as the fixed center of the map
+            map.getController().setCenter(startPoint);
+            // Set the desired fixed zoom level (e.g., 12.0)
+            mapController.setZoom(21.0);
+            GridCreator.createSquare(map, latitude, longitude, squareSizeMeters, currentMode);
+
+            // Do something with the updated coordinates
+            // For example, display them on the UI or use them in your logic
+
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+        @Override
+        public void onProviderEnabled(String provider) {}
+
+        @Override
+        public void onProviderDisabled(String provider) {}
+    };
+
 
     public void toggleMode(View view) {
         Button toggleButton = (Button) view;
@@ -306,8 +360,8 @@ public class MainActivity extends Activity {
                     // Set the desired fixed zoom level (e.g., 12.0)
                     mapController.setZoom(21.0);
                     GridCreator.createSquare(map, latitude, longitude, squareSizeMeters, currentMode);
-
                 }
+
                 /*
                 // Create a GeoPoint using the latitude and longitude variables
                 GeoPoint startPoint = new GeoPoint(latitude, longitude);

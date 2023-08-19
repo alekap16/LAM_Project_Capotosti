@@ -2,6 +2,9 @@ package com.example.lam_project;
 
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -10,6 +13,7 @@ import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.example.lam_project.managers.DatabaseManager;
 import com.example.lam_project.managers.SettingsManager;
 
 public class SettingsActivity extends Activity {
@@ -25,6 +29,7 @@ public class SettingsActivity extends Activity {
     private long selectedMinutes;
     private int selectedMeasurements;
     private SettingsManager settingsManager;
+    private DatabaseManager databaseManager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +43,7 @@ public class SettingsActivity extends Activity {
         dumpDatabaseButton = findViewById(R.id.dumpDatabaseButton);
         deleteDataButton = findViewById(R.id.deleteDataButton);
 
+        databaseManager = new DatabaseManager(this);
         settingsManager = new SettingsManager(this);
 
         notificationSwitch.setChecked(settingsManager.isNotificationEnabled());
@@ -87,18 +93,13 @@ public class SettingsActivity extends Activity {
             }
         });
 
-        dumpDatabaseButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-            }
-        });
+        dumpDatabaseButton.setOnClickListener(v -> databaseManager.showDumpDatabaseDialog
+                (SettingsActivity.this));
 
-        deleteDataButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-            }
-        });
+        deleteDataButton.setOnClickListener(v -> databaseManager.showEraseConfirmationDialog
+                (SettingsActivity.this));
     }
+
 
     // I need this for later usages
     private long convertMinutesToMilliseconds(long minutes) {

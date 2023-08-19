@@ -1,10 +1,13 @@
 package com.example.lam_project.managers;
 
+import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Environment;
 import android.util.Log;
 
 import com.example.lam_project.AcousticNoisePainter;
@@ -16,6 +19,9 @@ import com.example.lam_project.model.Square;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Polygon;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +42,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
     public static final String COLUMN_TIMESTAMP = "timestamp";
     public static final String COLUMN_SIGNAL_VALUE = "signalValue";
     public static final String COLUMN_COUNT = "count";
+    public static final String datasetDescription = "This data is retrieved from the app. Id is not relevant. longitude and latitude values represent the four angles that a square has. size represent the length of the square's lines expressed in METERS. Signal value is the aggregate of the signals values and the number of single values is counted in count. Type is 1 for LTE signal strength 2 for WiFi signal and 3 for Acoustic noise.";
 
     SQLiteDatabase db = getReadableDatabase();
     private static final String CREATE_SQUARE_TABLE =
@@ -151,17 +158,16 @@ public class DatabaseManager extends SQLiteOpenHelper {
         SettingsManager settingsManager = new SettingsManager(map.getContext());
         if(updatedSquare.getCount() < settingsManager.getSelectedMeasurements()){
                     updatedSquare.setId(square.getId());
-        updatedSquare.setSignalValue((updatedSquare.getSignalValue()+signalValue)/
-                    updatedSquare.getCount());
+        updatedSquare.setSignalValue((updatedSquare.getSignalValue()+signalValue));
             int fillColor = UpdatedSquarePainter.paintSquare(updatedSquare.getType(),
-                    updatedSquare.getSignalValue());
+                    updatedSquare.getSignalValue()/updatedSquare.getCount());
         updatedSquare.setColor(fillColor);
         Log.d("ELIMINA QUESTO","ID: "+updatedSquare.getId());
 
             deleteSquare(updatedSquare.getId(),map);
             long currentTimestamp = System.currentTimeMillis(); // Convert to seconds
         updatedSquare.setTimestamp(currentTimestamp);
-            Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
+            Context context = map.getContext();
             DatabaseManager dbHelper = new DatabaseManager(context);
 
             // Insert the square into the database
@@ -186,7 +192,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
     }
 
     public static void deleteSquare(long id, MapView map){
-        Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
+        Context context = map.getContext();
         DatabaseManager dbHelper = new DatabaseManager(context);
 
         // Insert the square into the database
@@ -195,6 +201,75 @@ public class DatabaseManager extends SQLiteOpenHelper {
         Log.d("DELETE", "DELETE WITH ID: "+id);
         dbHelper.close();
         db.close();
+    }
+
+    public void eraseAllData() {
+        SQLiteDatabase db = getWritableDatabase();
+        db.delete(TABLE_NAME, null, null);
+        db.close();
+    }
+
+
+    public void showEraseConfirmationDialog(Context context) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Confirm Erase")
+                .setMessage("Are you sure you want to erase all data?")
+                .setPositiveButton("Delete anyway", (dialog, which) -> eraseAllData())
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+    public void showDumpDatabaseDialog(Context context) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("Confirm dump")
+                .setMessage("Are you sure you want to dump the .csv data?")
+                .setPositiveButton("Dump it", (dialog, which) -> dumpDatabase(context, TABLE_NAME ))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    public void dumpDatabase(Context context, String tableName) {
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + tableName, null);
+
+        try {
+            File exportDir = new File(Environment.getExternalStoragePublicDirectory
+                    (Environment.DIRECTORY_DOWNLOADS), "MyDatabaseExports");
+            Log.d("DIRECTORY PATH", "DIR: "+ exportDir);
+            if (!exportDir.exists()) {
+                exportDir.mkdirs();
+            }
+
+            File file = new File(exportDir, tableName + ".csv");
+            file.createNewFile();
+            FileWriter fw = new FileWriter(file);
+            fw.append("# Dataset: " + datasetDescription + "\n");
+            int columnCount = cursor.getColumnCount();
+            for (int i = 0; i < columnCount; i++) {
+                if (i != 0) {
+                    fw.append(",");
+                }
+                fw.append(cursor.getColumnName(i));
+            }
+            fw.append("\n");
+
+            while (cursor.moveToNext()) {
+                for (int i = 0; i < columnCount; i++) {
+                    if (i != 0) {
+                        fw.append(",");
+                    }
+                    fw.append(cursor.getString(i));
+                }
+                fw.append("\n");
+            }
+
+            fw.flush();
+            fw.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            cursor.close();
+            db.close();
+        }
     }
 }
 

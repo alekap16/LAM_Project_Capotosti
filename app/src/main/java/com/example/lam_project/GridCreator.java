@@ -6,6 +6,7 @@ import android.provider.ContactsContract;
 import android.util.Log;
 
 import com.example.lam_project.managers.AcousticNoiseManager;
+import com.example.lam_project.managers.ButtonManager;
 import com.example.lam_project.managers.DatabaseManager;
 import com.example.lam_project.managers.SettingsManager;
 import com.example.lam_project.managers.SignalStrengthManager;
@@ -37,6 +38,7 @@ private static double currentAcousticNoise = 0.0;
     // Method to create and display the grid overlay
     public static void expiredSquares(MapView map, int mode, double squareSizeMeters) {
         SettingsManager settingsManager = new SettingsManager(map.getContext());
+        ButtonManager buttonManager = new ButtonManager(map.getContext());
         Handler handler = new Handler();
         Runnable timeCheckerRunnable = new Runnable() {
                 @Override
@@ -60,7 +62,8 @@ private static double currentAcousticNoise = 0.0;
                     //Istanzio ancora un db manager così garantisco che le istanze siano chiuse e aperte
                     DatabaseManager databaseManager2 = new DatabaseManager(map.getContext());
                     List<Square> printNonExpiredSquares = databaseManager2.getAllSquares();
-                    printNonExpiredSquares = retrieveSquares(map, mode, squareSizeMeters);
+                    printNonExpiredSquares = retrieveSquares(map, buttonManager.getCurrentMode(),
+                            buttonManager.getCurrentSquareSizeMeters());
                     for (Square square : printNonExpiredSquares) {
                         createGridExistingSquares(map, square);
                     }

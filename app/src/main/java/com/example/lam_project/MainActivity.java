@@ -23,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.example.lam_project.managers.ButtonManager;
 import com.example.lam_project.managers.DatabaseManager;
 import com.example.lam_project.managers.SignalStrengthManager;
 import com.example.lam_project.model.Square;
@@ -166,20 +167,37 @@ public class MainActivity extends Activity {
         map = (MapView) findViewById(R.id.map);
 
         map.setTileSource(TileSourceFactory.MAPNIK);
+        ButtonManager buttonManager = new ButtonManager(map.getContext());
         Button toggleModeButton = findViewById(R.id.btn_toggle_mode);
         Button manualScanButton = findViewById(R.id.btn_manual_scan);
         //this name is dumb because it's not actually on Button change (in this instance);
         //but It does the same static thing aka printing the squares in db so no need to change
-        printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
+        printExistingSquaresOnButtonChange(buttonManager.getCurrentMode(), buttonManager.getCurrentSquareSizeMeters());
         toggleModeButton.setOnClickListener(this::toggleMode);
+
+        if(buttonManager.getCurrentMode() == MODE_WIFI) {
+            toggleModeButton.setBackgroundResource(R.drawable.ic_wifi);
+        }
+        else if(buttonManager.getCurrentMode() == MODE_SOUND) {
+            Log.d("TEST", "test");
+            toggleModeButton.setBackgroundResource(R.drawable.ic_sound);
+        }
+
         Button toggleDistanceButton = findViewById(R.id.btn_toggle_distances);
+
+        if(buttonManager.getCurrentSquareSizeMeters() == RANGE_MEDIUM) {
+            toggleDistanceButton.setText("100M");
+        }
+        else if (buttonManager.getCurrentSquareSizeMeters() == RANGE_BIG){
+            toggleDistanceButton.setText("1KM");
+        }
+
         toggleDistanceButton.setOnClickListener(this::toggleDistance);
         manualScanButton.setOnClickListener(this::manualScan);
         map.setClickable(false);
         map.setMultiTouchControls(false);
-        GridCreator.expiredSquares(map, currentMode, squareSizeMeters);
+        GridCreator.expiredSquares(map, buttonManager.getCurrentMode(), buttonManager.getCurrentSquareSizeMeters());
         startLocationUpdates();
-
         /*
         GeoPoint startPoint = new GeoPoint(44.494887, 11.3426163);
         mapController.setCenter(startPoint);*/
@@ -216,7 +234,9 @@ public class MainActivity extends Activity {
             map.getController().setCenter(startPoint);
             // Set the desired fixed zoom level (e.g., 12.0)
             mapController.setZoom(21.0);
-            GridCreator.createSquare(map, latitude, longitude, squareSizeMeters, currentMode);
+            ButtonManager buttonManager = new ButtonManager(map.getContext());
+            GridCreator.createSquare(map, latitude, longitude,
+                    buttonManager.getCurrentSquareSizeMeters(), buttonManager.getCurrentMode());
 
             // Do something with the updated coordinates
             // For example, display them on the UI or use them in your logic
@@ -242,6 +262,8 @@ public class MainActivity extends Activity {
 
         // Disable button click temporarily
         isButtonModeClickable = false;
+        ButtonManager buttonManager = new ButtonManager(map.getContext());
+        Log.d("TEST", "MODE: " +buttonManager.getCurrentMode());
 
         // Add a delay of 1 second before enabling button click again
         new Handler().postDelayed(new Runnable() {
@@ -253,13 +275,13 @@ public class MainActivity extends Activity {
         //This switch case isn't broken as it may seems; it kinda works for the next iteration. If I
         //press the LTE signal it means i'm switching with a single 'tap' to the Wifi, so I'm
         //looking to trigger the Wi-Fi related stuff, same goes for the other two.
-        switch (currentMode) {
+        switch (buttonManager.getCurrentMode()) {
             case MODE_LTE:
                 Toast.makeText(this, "Wi-Fi signal", Toast.LENGTH_SHORT).show();
                 map.getOverlays().clear();
-                currentMode = MODE_WIFI;
+                buttonManager.setCurrentMode(MODE_WIFI);
                 toggleButton.setBackgroundResource(R.drawable.ic_wifi);
-                printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
+                //printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
                 break;
             case MODE_WIFI:
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -267,17 +289,17 @@ public class MainActivity extends Activity {
                 } else {
                     Toast.makeText(this, "Acustic noise", Toast.LENGTH_SHORT).show();
                     map.getOverlays().clear();
-                    currentMode = MODE_SOUND;
+                    buttonManager.setCurrentMode(MODE_SOUND);
                     toggleButton.setBackgroundResource(R.drawable.ic_sound);
-                    printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
+                    //printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
                 }
                 break;
             case MODE_SOUND:
                 Toast.makeText(this, "LTE signal", Toast.LENGTH_SHORT).show();
                 map.getOverlays().clear();
-                currentMode = MODE_LTE;
+                buttonManager.setCurrentMode(MODE_LTE);
                 toggleButton.setBackgroundResource(R.drawable.ic_lte);
-                printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
+                //printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
                 break;
         }
     }
@@ -291,6 +313,8 @@ public class MainActivity extends Activity {
         // Disable button click temporarily
         isButtonRangesClickable = false;
 
+        ButtonManager buttonManager = new ButtonManager(map.getContext());
+
         // Add a delay of 1 second before enabling button click again
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -299,27 +323,27 @@ public class MainActivity extends Activity {
             }
         }, 5000);
         //Same mechanism: the current selection triggers the next and so on
-        switch ((int) squareSizeMeters) {
+        switch ((int) buttonManager.getCurrentSquareSizeMeters()) {
             case 10:
                 Toast.makeText(this, "100 meters range", Toast.LENGTH_SHORT).show();
                 map.getOverlays().clear();
-                squareSizeMeters = RANGE_MEDIUM;
+                buttonManager.setCurrentSquareSizeMeters(RANGE_MEDIUM);
                 toggleButton.setText("100M");
-                printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
+                //printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
                 break;
             case 100:
                 Toast.makeText(this, "1 kilometer range", Toast.LENGTH_SHORT).show();
                 map.getOverlays().clear();
-                squareSizeMeters = RANGE_BIG;
+                buttonManager.setCurrentSquareSizeMeters(RANGE_BIG);
                 toggleButton.setText("1KM");
-                printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
+                //printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
                 break;
             case 1000:
                 Toast.makeText(this, "10 meters range", Toast.LENGTH_SHORT).show();
                 map.getOverlays().clear();
-                squareSizeMeters = RANGE_SMALL;
+                buttonManager.setCurrentSquareSizeMeters(RANGE_SMALL);
                 toggleButton.setText("10M");
-                printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
+                //printExistingSquaresOnButtonChange(currentMode, squareSizeMeters);
                 break;
         }
     }
@@ -343,6 +367,7 @@ public class MainActivity extends Activity {
     }
     private void startLocationUpdates() {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        ButtonManager buttonManager = new ButtonManager(this);
         LocationListener locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
@@ -359,7 +384,8 @@ public class MainActivity extends Activity {
                     map.getController().setCenter(startPoint);
                     // Set the desired fixed zoom level (e.g., 12.0)
                     mapController.setZoom(21.0);
-                    GridCreator.createSquare(map, latitude, longitude, squareSizeMeters, currentMode);
+                    GridCreator.createSquare(map, latitude, longitude,
+                            buttonManager.getCurrentSquareSizeMeters(), buttonManager.getCurrentMode());
                 }
 
                 /*

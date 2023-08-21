@@ -1,66 +1,96 @@
 package com.example.lam_project.managers;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.media.AudioFormat;
+import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
+
+import androidx.core.app.ActivityCompat;
 
 public class AcousticNoiseManager {
-    private MediaRecorder mRecorder;
     private boolean mIsRecording = false;
+    private AudioRecord mAudioRecord;
+
+    public interface NoiseLevelCallback {
+        void onNoiseLevelMeasured(double noiseLevelInDb);
+    }
 
     public void startRecording(Context context, final NoiseLevelCallback callback) {
         if (mIsRecording) {
             return;
         }
 
-        mRecorder = new MediaRecorder();
-        mRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
-        mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
-        mRecorder.setOutputFile("/dev/null");
+        int sampleRate = 44100;
+        int channelConfig = AudioFormat.CHANNEL_IN_MONO;
+        int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
+        int bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat);
 
-        try {
-            mRecorder.prepare();
-            mRecorder.start();
-            mIsRecording = true;
-
-            // Schedule a task to update the noise level every second
-            final Handler handler = new Handler(Looper.getMainLooper());
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (mIsRecording) {
-                        double amplitude = mRecorder.getMaxAmplitude();
-                        //Potrei usare questa per trasformare apmlitude in dB con il threshold
-                        // dell'essere umano, dove 0 = silenzio. Questo il parametro
-                        //double THRESHOLD_AMPLITUDE = 20e-6;
-//                        double relative_dB = 20 * log10((double) maxAmplitude / REFERENCE_AMPLITUDE);
-//                        double absolute_dB = relative_dB - 20 * log10(REFERENCE_AMPLITUDE / THRESHOLD_AMPLITUDE);
-
-                        double noiseLevel = 20 * Math.log10(amplitude / 32767.0);
-                        callback.onNoiseLevelMeasured(noiseLevel);
-                        handler.postDelayed(this, 1000); // Update every second
-                    }
-                }
-            }, 1000);
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
         }
+        mAudioRecord = new AudioRecord(
+                MediaRecorder.AudioSource.MIC,
+                sampleRate,
+                channelConfig,
+                audioFormat,
+                bufferSize
+        );
+
+        if (mAudioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
+            // Handle initialization error
+            return;
+        }
+
+        mAudioRecord.startRecording();
+        mIsRecording = true;
+        final double humanThresholdDb = 60.0;
+
+        final double offsetAmplitude = -22.0;
+
+        final Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (mIsRecording) {
+                    short[] audioBuffer = new short[bufferSize];
+                    mAudioRecord.read(audioBuffer, 0, bufferSize);
+
+                    double rms = 0;
+                    for (short sample : audioBuffer) {
+                        rms += sample * sample;
+                    }
+                    rms = Math.sqrt(rms / bufferSize);
+
+
+                    double amplitude = (rms / Math.sqrt(2)) - offsetAmplitude;
+
+                    double noiseLevelInDb = 20 * Math.log10(amplitude) - humanThresholdDb;
+
+                    callback.onNoiseLevelMeasured(noiseLevelInDb);
+
+                    handler.postDelayed(this, 1000); // Update
+                }
+            }
+        }, 1000);
     }
 
     public void stopRecording() {
         if (mIsRecording) {
-            mRecorder.stop();
-            mRecorder.release();
-            mRecorder = null;
+            mAudioRecord.stop();
+            mAudioRecord.release();
+            mAudioRecord = null;
             mIsRecording = false;
         }
-    }
-
-    public interface NoiseLevelCallback {
-        void onNoiseLevelMeasured(double noiseLevel);
     }
 }

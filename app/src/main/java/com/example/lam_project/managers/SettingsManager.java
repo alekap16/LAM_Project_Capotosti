@@ -6,7 +6,7 @@ import android.content.SharedPreferences;
 public class SettingsManager {
 
     private static final String PREF_NAME = "settings_preferences";
-    private static final String KEY_NOTIFICATION_ENABLED = "notification_enabled";
+    private static final String SWITCH_AUTO_SCAN = "auto_scan_enabled";
     private static final String KEY_SELECTED_MINUTES = "selected_minutes";
     private static final String KEY_SELECTED_MEASUREMENTS = "selected_measurements";
 
@@ -16,12 +16,12 @@ public class SettingsManager {
         preferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
     }
 
-    public boolean isNotificationEnabled() {
-        return preferences.getBoolean(KEY_NOTIFICATION_ENABLED, false);
+    public boolean isAutoScanEnabled() {
+        return preferences.getBoolean(SWITCH_AUTO_SCAN, false);
     }
 
-    public void setNotificationEnabled(boolean isEnabled) {
-        preferences.edit().putBoolean(KEY_NOTIFICATION_ENABLED, isEnabled).apply();
+    public void setAutoScanEnabled(boolean isEnabled) {
+        preferences.edit().putBoolean(SWITCH_AUTO_SCAN, isEnabled).apply();
     }
 
     public long getSelectedMinutes() {

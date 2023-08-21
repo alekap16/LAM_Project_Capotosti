@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat;
 
 import com.example.lam_project.managers.ButtonManager;
 import com.example.lam_project.managers.DatabaseManager;
+import com.example.lam_project.managers.SettingsManager;
 import com.example.lam_project.managers.SignalStrengthManager;
 import com.example.lam_project.model.Square;
 
@@ -37,14 +38,13 @@ import org.osmdroid.views.MapView;
 import java.io.File;
 import java.util.List;
 
+
 public class MainActivity extends Activity {
     MapView map = null;
-
-    private static final int RECORD_AUDIO_PERMISSION_REQUEST_CODE = 1001;
+    private static final int RECORD_AUDIO_PERMISSION_REQUEST_CODE = 1;
     private static double RANGE_SMALL = 10.0;
     private static double RANGE_MEDIUM = 100.0;
     private static double RANGE_BIG = 1000.0;
-    private static double squareSizeMeters = 10.0;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private double latitude;
     private double longitude;
@@ -61,7 +61,7 @@ public class MainActivity extends Activity {
 
     private LocationManager locationManager;
 
-    public void printDatabaseValues() {
+    /*public void printDatabaseValues() {
         // Get a reference to the database helper
         Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
         DatabaseManager dbHelper = new DatabaseManager(context);
@@ -108,21 +108,21 @@ public class MainActivity extends Activity {
                 cursor.close();
             }
         }
-    }
+    }*/
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         //Questo lo devo togliere
-        signalStrengthManager = new SignalStrengthManager(this);
+        /*signalStrengthManager = new SignalStrengthManager(this);
 
         signalStrengthManager.requestSignalStrengthUpdates(new SignalStrengthManager.OnSignalStrengthChangeListener() {
             @Override
             public void onSignalStrengthChanged(int signalStrength) {
                 // Log.d("SignalStrength", "LTE Signal Strength: " + signalStrength);
             }
-        });
+        });*/
         // Initialize osmdroid configuration (needed for caching, etc.)
         String osmCachePath = getFilesDir().getAbsolutePath() + "/osmdroid";
         Configuration.getInstance().load(getApplicationContext(),
@@ -142,32 +142,22 @@ public class MainActivity extends Activity {
             startLocationUpdates();
         }
 
-
-        // Initialize osmdroid configuration (needed for caching, etc.)
-
-        //handle permissions first, before map is created. not depicted here
-
-        //load/initialize the osmdroid configuration, this can be done
         Context ctx = getApplicationContext();
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
         //setting this before the layout is inflated is a good idea
         //it 'should' ensure that the map has a writable location for the map cache, even without permissions
         //if no tiles are displayed, you can try overriding the cache path using Configuration.getInstance().setCachePath
         //see also StorageUtils
-        //note, the load method also sets the HTTP User Agent to your application's package name, abusing osm's tile servers will get you banned based on this string
+        //note, the load method also sets the HTTP User Agent to your application's package name,
+        // abusing osm's tile servers will get you banned based on this string
 
         //inflate and create the map
         setContentView(R.layout.activity_main);
-
-        /*BoundingBox italyBoundingBox = new BoundingBox(35.5, 6.5, 47.1, 18.8);
-        map.zoomToBoundingBox(italyBoundingBox, false);*/
-        //map.setBuiltInZoomControls(false);
-        //IMapController mapController = map.getController();
-
         map = (MapView) findViewById(R.id.map);
-
         map.setTileSource(TileSourceFactory.MAPNIK);
+
         ButtonManager buttonManager = new ButtonManager(map.getContext());
+
         Button toggleModeButton = findViewById(R.id.btn_toggle_mode);
         Button manualScanButton = findViewById(R.id.btn_manual_scan);
         //this name is dumb because it's not actually on Button change (in this instance);
@@ -197,11 +187,8 @@ public class MainActivity extends Activity {
         map.setClickable(false);
         map.setMultiTouchControls(false);
         GridCreator.expiredSquares(map, buttonManager.getCurrentMode(), buttonManager.getCurrentSquareSizeMeters());
-        startLocationUpdates();
-        /*
-        GeoPoint startPoint = new GeoPoint(44.494887, 11.3426163);
-        mapController.setCenter(startPoint);*/
 
+        //startLocationUpdates();
     }
 
     private void manualScan(View view) {
@@ -217,10 +204,12 @@ public class MainActivity extends Activity {
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
+        new Handler().postDelayed(() -> isButtonRangesClickable = true, 2000);
         locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, locationListener, null);
     }
 
     private final LocationListener locationListener = new LocationListener() {
+
         @Override
         public void onLocationChanged(@NonNull Location location) {
             // Update the latitude and longitude variables
@@ -287,7 +276,7 @@ public class MainActivity extends Activity {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, RECORD_AUDIO_PERMISSION_REQUEST_CODE);
                 } else {
-                    Toast.makeText(this, "Acustic noise", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Acoustic noise", Toast.LENGTH_SHORT).show();
                     map.getOverlays().clear();
                     buttonManager.setCurrentMode(MODE_SOUND);
                     toggleButton.setBackgroundResource(R.drawable.ic_sound);
@@ -355,11 +344,11 @@ public class MainActivity extends Activity {
         GridCreator.createGridExistingSquares(map, square);
         }
     }
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        signalStrengthManager.stopSignalStrengthUpdates();
-    }
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//        signalStrengthManager.stopSignalStrengthUpdates();
+//    }
 
     public void openSettingsActivity(View view) {
         Intent intent = new Intent(this, SettingsActivity.class);
@@ -367,6 +356,7 @@ public class MainActivity extends Activity {
     }
     private void startLocationUpdates() {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        SettingsManager settingsManager = new SettingsManager(this);
         ButtonManager buttonManager = new ButtonManager(this);
         LocationListener locationListener = new LocationListener() {
             @Override
@@ -375,7 +365,7 @@ public class MainActivity extends Activity {
                 // get coordinates from gps' location object (android documentation)
                 double latitude = location.getLatitude();
                 double longitude = location.getLongitude();
-                if (isCameraFixed) {
+                if (settingsManager.isAutoScanEnabled()) {
 
                     IMapController mapController = map.getController();
                     // Create a GeoPoint using the latitude and longitude variables
@@ -387,7 +377,6 @@ public class MainActivity extends Activity {
                     GridCreator.createSquare(map, latitude, longitude,
                             buttonManager.getCurrentSquareSizeMeters(), buttonManager.getCurrentMode());
                 }
-
                 /*
                 // Create a GeoPoint using the latitude and longitude variables
                 GeoPoint startPoint = new GeoPoint(latitude, longitude);

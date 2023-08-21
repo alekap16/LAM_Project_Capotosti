@@ -2,12 +2,7 @@ package com.example.lam_project;
 
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.Switch;
@@ -17,7 +12,7 @@ import com.example.lam_project.managers.DatabaseManager;
 import com.example.lam_project.managers.SettingsManager;
 
 public class SettingsActivity extends Activity {
-    private Switch notificationSwitch;
+    private Switch autoScanSwitch;
     private SeekBar minutesSeekBar;
     private SeekBar measurementsSeekBar;
     private TextView measurementsLabel;
@@ -35,7 +30,7 @@ public class SettingsActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        notificationSwitch = findViewById(R.id.notificationSwitch);
+        autoScanSwitch = findViewById(R.id.autoScanSwitch);
         minutesSeekBar = findViewById(R.id.minutesSeekBar);
         measurementsSeekBar = findViewById(R.id.measurementsSeekBar);
         measurementsLabel = findViewById(R.id.measurementsLabel);
@@ -46,17 +41,16 @@ public class SettingsActivity extends Activity {
         databaseManager = new DatabaseManager(this);
         settingsManager = new SettingsManager(this);
 
-        notificationSwitch.setChecked(settingsManager.isNotificationEnabled());
         minutesSeekBar.setProgress((int) (settingsManager.getSelectedMinutes() - 5));
         measurementsSeekBar.setProgress(settingsManager.getSelectedMeasurements() - 1);
 
         minutesLabel.setText("Minutes for new measurements: " + settingsManager.getSelectedMinutes());
         measurementsLabel.setText("Number of measurements: " + settingsManager.getSelectedMeasurements());
 
-        notificationSwitch.setChecked(settingsManager.isNotificationEnabled());
+        autoScanSwitch.setChecked(settingsManager.isAutoScanEnabled());
 
-        notificationSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            settingsManager.setNotificationEnabled(isChecked);
+        autoScanSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            settingsManager.setAutoScanEnabled(isChecked);
         });
         minutesSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override

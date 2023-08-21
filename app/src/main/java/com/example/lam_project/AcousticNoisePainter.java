@@ -17,7 +17,7 @@ import org.osmdroid.views.overlay.Polygon;
 public class AcousticNoisePainter {
 
     // Acoustic Noise level, this is red when its louder and green when smoother.
-    private static final double VERY_LOUD = -40.0;
+    private static final double VERY_LOUD = 10.0;
     private static final double AVERAGE_NOISE = -20.0;
 
 
@@ -33,14 +33,14 @@ public class AcousticNoisePainter {
             return;
 
         int fillColor;
-
+        Log.d("NOISE LEVEL" ,"NOISE LEVEL: "+acousticNoise);
         // Determine the color based on the signal strength level
-        if (acousticNoise <= VERY_LOUD) {
-            fillColor = Color.argb(ALPHA_TRANSPARENT, 255, 0, 0); // Red with 40% transparency
-        } else if (acousticNoise > VERY_LOUD && acousticNoise <= AVERAGE_NOISE) {
+        if (acousticNoise <= AVERAGE_NOISE) {
+            fillColor = Color.argb(ALPHA_TRANSPARENT, 0, 255, 0); // Red with 40% transparency
+        } else if (acousticNoise < VERY_LOUD && acousticNoise > AVERAGE_NOISE) {
             fillColor = Color.argb(ALPHA_TRANSPARENT, 255, 255, 0); // Yellow with 40% transparency
         } else {
-            fillColor = Color.argb(ALPHA_TRANSPARENT, 0, 255, 0); // Green with 40% transparency
+            fillColor = Color.argb(ALPHA_TRANSPARENT, 255, 0, 0); // Green with 40% transparency
         }
 
         square.setStrokeColor(fillColor);

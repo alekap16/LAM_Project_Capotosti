@@ -7,12 +7,12 @@
     tools:context=".SettingsActivity">
 
     <Switch
-        android:id="@+id/notificationSwitch"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="144dp"
+        android:id="@+id/autoScanSwitch"
+        android:layout_width="227dp"
+        android:layout_height="29dp"
         android:layout_marginTop="16dp"
-        android:text="Notification"
+        android:text="Automatic measurements"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -42,7 +42,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:max="25"
-        app:layout_constraintTop_toBottomOf="@id/notificationSwitch"
+        app:layout_constraintTop_toBottomOf="@id/autoScanSwitch"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginStart="16dp"
@@ -65,8 +65,8 @@
         android:id="@+id/dumpDatabaseButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="248dp"
-        android:layout_marginTop="204dp"
+        android:layout_marginStart="256dp"
+        android:layout_marginTop="116dp"
         android:text="Dump Database"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/measurementsLabel" />
@@ -75,8 +75,8 @@
         android:id="@+id/deleteDataButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="204dp"
-        android:layout_marginEnd="260dp"
+        android:layout_marginTop="116dp"
+        android:layout_marginEnd="256dp"
         android:text="Delete Data"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintRight_toLeftOf="@+id/dumpDatabaseButton"

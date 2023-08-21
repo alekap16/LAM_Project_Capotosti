@@ -25,7 +25,7 @@ import java.util.List;
 //so i can re-use the code for 100m squares and 1km. as for now I get one done since this is
 //at first look easy to complete for other use cases
 public class GridCreator {
-    private static int MILLISECONDS_EXPIRY_REFRESH = 10000;
+    private static int MILLISECONDS_EXPIRY_REFRESH = 10;
     private static double currentNoiseLevel = 0.0;
     private static double currentLTESignalStrength = 0.0; // Variable to store the current LTE signal strength
 private static double currentWiFiSignalLevel = 0.0; // Store the wifi signal expressed in level.
@@ -47,13 +47,13 @@ private static double currentAcousticNoise = 0.0;
                     DatabaseManager databaseManager = new DatabaseManager(map.getContext());
                     List<Square> squares = databaseManager.getAllSquares();
                     for (Square squareExpired : squares ) {
-                        Log.d("Square exp", "Square exp: "+squareExpired.getTimestamp());
+//                        Log.d("Square exp", "Square exp: "+squareExpired.getTimestamp());
                         if (Utils.hasTimeExpired(squareExpired.getTimestamp(), settingsManager.getSelectedMinutes())) {
 //                            Log.d("Square Timestamp", "Square timestamp: "+squareExpired.getTimestamp());
 //                            Log.d("current Timestamp", "current timestamp: "+System.currentTimeMillis());
                             long id = squareExpired.getId();
                             DatabaseManager.deleteSquare(id, map);
-                            Log.d("EXPIRED", "I am expired" + id);
+//                            Log.d("EXPIRED", "I am expired" + id);
                         }
                     }
                     databaseManager.close();
@@ -140,6 +140,7 @@ private static double currentAcousticNoise = 0.0;
             //mapView.getOverlayManager().add(square);
             //existingSquares.add(square);
             //mapView.invalidate();
+            Log.d("MODE", "MODE :"+mode);
             if (mode == 1) {
                 // Store the current LTE signal strength from SignalStrengthManager
                 SignalStrengthManager signalStrengthManager = new
@@ -162,15 +163,26 @@ private static double currentAcousticNoise = 0.0;
                         currentWiFiSignalLevel, mode, squareSizeMeters );
                // Log.d("Wifi log", "Wifi signal Dbm"+wifiSignalManager.getWifiSignalStrength());
             } else {
-                    AcousticNoiseManager mNoiseManager = new AcousticNoiseManager();
-                    mNoiseManager.startRecording(mapView.getContext(), noiseLevel -> {
-                        currentNoiseLevel = noiseLevel;
-                        Log.d("NoiseLevel", "Current noise level: " + noiseLevel + " dB");
-                        mNoiseManager.stopRecording();
-                    });
+                Log.d("TEST", "Test");
+                AcousticNoiseManager mNoiseManager = new AcousticNoiseManager();
 
-                    AcousticNoisePainter.paintSquareByAcousticNoise(mapView, square,
-                            currentNoiseLevel, mode, squareSizeMeters);
+                mNoiseManager.startRecording(mapView.getContext(), new AcousticNoiseManager.NoiseLevelCallback() {
+                    @Override
+                    public void onNoiseLevelMeasured(double noiseLevelInDb) {
+                        // Use the noise level value (noiseLevelInDb) as needed
+                        // For example, update UI elements with the noise level value
+                        // Remember to consider thread synchronization if updating UI
+
+                        // Log the noise level for testing
+                        Log.d("NoiseLevel", "Current noise level: " + noiseLevelInDb + " dB");
+                        currentNoiseLevel = noiseLevelInDb;
+                        mNoiseManager.stopRecording();
+                    }
+                });
+
+                AcousticNoisePainter.paintSquareByAcousticNoise(mapView, square,
+                        currentNoiseLevel, mode, squareSizeMeters);
+                    Log.d("input", "currentNoiseLevel. "+ currentNoiseLevel);
                 }
         }
     }
@@ -222,9 +234,19 @@ private static double currentAcousticNoise = 0.0;
                                 // Log.d("Wifi log", "Wifi signal Dbm"+wifiSignalManager.getWifiSignalStrength());
                             } else {
                                 AcousticNoiseManager mNoiseManager = new AcousticNoiseManager();
-                                mNoiseManager.startRecording(mapView.getContext(), noiseLevel -> {
-                                    currentNoiseLevel = noiseLevel;
-                                    mNoiseManager.stopRecording();
+
+                                mNoiseManager.startRecording(mapView.getContext(), new AcousticNoiseManager.NoiseLevelCallback() {
+                                    @Override
+                                    public void onNoiseLevelMeasured(double noiseLevelInDb) {
+                                        // Use the noise level value (noiseLevelInDb) as needed
+                                        // For example, update UI elements with the noise level value
+                                        // Remember to consider thread synchronization if updating UI
+
+                                        // Log the noise level for testing
+                                        Log.d("NoiseLevel", "Current noise level: " + noiseLevelInDb + " dB");
+                                        currentNoiseLevel = noiseLevelInDb;
+                                        mNoiseManager.stopRecording();
+                                    }
                                 });
                                 DatabaseManager.updateSquare(square, currentNoiseLevel, mapView);
                             }

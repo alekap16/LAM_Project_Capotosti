@@ -1,6 +1,7 @@
 package com.example.lam_project;
 
 
+import android.content.Context;
 import android.os.Handler;
 import android.provider.ContactsContract;
 import android.util.Log;
@@ -8,6 +9,7 @@ import android.util.Log;
 import com.example.lam_project.managers.AcousticNoiseManager;
 import com.example.lam_project.managers.ButtonManager;
 import com.example.lam_project.managers.DatabaseManager;
+import com.example.lam_project.managers.NotificationsManager;
 import com.example.lam_project.managers.SettingsManager;
 import com.example.lam_project.managers.SignalStrengthManager;
 import com.example.lam_project.managers.WifiSignalManager;
@@ -28,16 +30,15 @@ public class GridCreator {
     private static int MILLISECONDS_EXPIRY_REFRESH = 10;
     private static double currentNoiseLevel = 0.0;
     private static double currentLTESignalStrength = 0.0; // Variable to store the current LTE signal strength
-private static double currentWiFiSignalLevel = 0.0; // Store the wifi signal expressed in level.
-private static double currentAcousticNoise = 0.0;
-    //Create each unique ID for squares, needs for overlap prevention
-    private static final List<Polygon> existingSquares = new ArrayList<>();
+    private static double currentWiFiSignalLevel = 0.0; // Store the wifi signal expressed in level.
+
     public GridCreator() {
         // No need for any constructor parameters in this case
     }
     // Method to create and display the grid overlay
     public static void expiredSquares(MapView map, int mode, double squareSizeMeters) {
         SettingsManager settingsManager = new SettingsManager(map.getContext());
+        NotificationsManager notificationsManager = new NotificationsManager(map.getContext());
         ButtonManager buttonManager = new ButtonManager(map.getContext());
         Handler handler = new Handler();
         Runnable timeCheckerRunnable = new Runnable() {
@@ -53,6 +54,11 @@ private static double currentAcousticNoise = 0.0;
 //                            Log.d("current Timestamp", "current timestamp: "+System.currentTimeMillis());
                             long id = squareExpired.getId();
                             DatabaseManager.deleteSquare(id, map);
+                            if(notificationsManager.areNotificationsEnabled() &&
+                                    notificationsManager.isExpiryNotificationsEnabled())
+                            {
+                                NotificationsManager.showExpiredNotification(map.getContext());
+                            }
 //                            Log.d("EXPIRED", "I am expired" + id);
                         }
                     }
@@ -111,79 +117,98 @@ private static double currentAcousticNoise = 0.0;
         //mapView.invalidate();
     }
     public static void createSquare(MapView mapView, double latitude, double longitude,
-                                    double squareSizeMeters, int mode) {
-        if (mapView == null)
-            return;
+                                    double squareSizeMeters, int mode, boolean isManual) {
 
+        if (mapView == null) return;
+
+        NotificationsManager.createNotificationChannel(mapView.getContext());
+        SettingsManager settingsManager = new SettingsManager(mapView.getContext());
+        NotificationsManager notificationsManager = new NotificationsManager(mapView.getContext());
         List<Square> existingSquares = retrieveSquares(mapView, mode, squareSizeMeters);
         if (!doesSquareOverlap(existingSquares, latitude, longitude, squareSizeMeters,
                 mode, mapView)) {
 
-            double latitudeDiff = metersToLatitude(squareSizeMeters);
-            double longitudeDiff = metersToLongitude(squareSizeMeters, latitude);
+            if(settingsManager.isAutoScanEnabled() || isManual == true) {
+                double latitudeDiff = metersToLatitude(squareSizeMeters);
+                double longitudeDiff = metersToLongitude(squareSizeMeters, latitude);
 
-            // Calculate the area of the square grid
-            double latStart = latitude - 0.5 * latitudeDiff;
-            double latEnd = latitude + 0.5 * latitudeDiff;
-            double lonStart = longitude - 0.5 * longitudeDiff;
-            double lonEnd = longitude + 0.5 * longitudeDiff;
+                // Calculate the area of the square grid
+                double latStart = latitude - 0.5 * latitudeDiff;
+                double latEnd = latitude + 0.5 * latitudeDiff;
+                double lonStart = longitude - 0.5 * longitudeDiff;
+                double lonEnd = longitude + 0.5 * longitudeDiff;
 
-            // Create the square around the given coordinates
-            List<GeoPoint> squarePoints = new ArrayList<>();
-            squarePoints.add(new GeoPoint(latStart, lonStart));
-            squarePoints.add(new GeoPoint(latEnd, lonStart));
-            squarePoints.add(new GeoPoint(latEnd, lonEnd));
-            squarePoints.add(new GeoPoint(latStart, lonEnd));
+                // Create the square around the given coordinates
+                List<GeoPoint> squarePoints = new ArrayList<>();
+                squarePoints.add(new GeoPoint(latStart, lonStart));
+                squarePoints.add(new GeoPoint(latEnd, lonStart));
+                squarePoints.add(new GeoPoint(latEnd, lonEnd));
+                squarePoints.add(new GeoPoint(latStart, lonEnd));
 
-            Polygon square = new Polygon(mapView);
-            square.setPoints(squarePoints);
-            //mapView.getOverlayManager().add(square);
-            //existingSquares.add(square);
-            //mapView.invalidate();
-            Log.d("MODE", "MODE :"+mode);
-            if (mode == 1) {
-                // Store the current LTE signal strength from SignalStrengthManager
-                SignalStrengthManager signalStrengthManager = new
-                        SignalStrengthManager(mapView.getContext());
-                signalStrengthManager.requestSignalStrengthUpdates(signalStrength -> {
+                Polygon square = new Polygon(mapView);
+                square.setPoints(squarePoints);
+                //mapView.getOverlayManager().add(square);
+                //existingSquares.add(square);
+                //mapView.invalidate();
+                Log.d("MODE", "MODE :" + mode);
+                if (mode == 1) {
+                    // Store the current LTE signal strength from SignalStrengthManager
+                    SignalStrengthManager signalStrengthManager = new
+                            SignalStrengthManager(mapView.getContext());
+                    signalStrengthManager.requestSignalStrengthUpdates(signalStrength -> {
 
-                    // Store the current LTE signal strength
-                    currentLTESignalStrength = signalStrength;
-                    signalStrengthManager.stopSignalStrengthUpdates();
-                });
+                        // Store the current LTE signal strength
+                        currentLTESignalStrength = signalStrength;
+                        signalStrengthManager.stopSignalStrengthUpdates();
+                    });
 
-                // Paint the square based on the current LTE signal strength
-                LTESignalPainter.paintSquareByLTESignalStrength(mapView, square,
-                        currentLTESignalStrength, mode, squareSizeMeters);
-            }
-            else if(mode == 2) {
-                WifiSignalManager wifiSignalManager = new WifiSignalManager(mapView.getContext());
-                currentWiFiSignalLevel = wifiSignalManager.getWifiSignalStrength();
-                WiFiSignalPainter.paintSquareByWiFiSignalStrength(mapView, square,
-                        currentWiFiSignalLevel, mode, squareSizeMeters );
-               // Log.d("Wifi log", "Wifi signal Dbm"+wifiSignalManager.getWifiSignalStrength());
-            } else {
-                Log.d("TEST", "Test");
-                AcousticNoiseManager mNoiseManager = new AcousticNoiseManager();
+                    // Paint the square based on the current LTE signal strength
+                    LTESignalPainter.paintSquareByLTESignalStrength(mapView, square,
+                            currentLTESignalStrength, mode, squareSizeMeters);
+                } else if (mode == 2) {
+                    WifiSignalManager wifiSignalManager = new WifiSignalManager(mapView.getContext());
+                    currentWiFiSignalLevel = wifiSignalManager.getWifiSignalStrength();
+                    WiFiSignalPainter.paintSquareByWiFiSignalStrength(mapView, square,
+                            currentWiFiSignalLevel, mode, squareSizeMeters);
+                    // Log.d("Wifi log", "Wifi signal Dbm"+wifiSignalManager.getWifiSignalStrength());
+                } else {
+                    Log.d("TEST", "Test");
+                    AcousticNoiseManager mNoiseManager = new AcousticNoiseManager();
 
-                mNoiseManager.startRecording(mapView.getContext(), new AcousticNoiseManager.NoiseLevelCallback() {
-                    @Override
-                    public void onNoiseLevelMeasured(double noiseLevelInDb) {
-                        // Use the noise level value (noiseLevelInDb) as needed
-                        // For example, update UI elements with the noise level value
-                        // Remember to consider thread synchronization if updating UI
+                    mNoiseManager.startRecording(mapView.getContext(), new AcousticNoiseManager.NoiseLevelCallback() {
+                        @Override
+                        public void onNoiseLevelMeasured(double noiseLevelInDb) {
+                            // Use the noise level value (noiseLevelInDb) as needed
+                            // For example, update UI elements with the noise level value
+                            // Remember to consider thread synchronization if updating UI
 
-                        // Log the noise level for testing
-                        Log.d("NoiseLevel", "Current noise level: " + noiseLevelInDb + " dB");
-                        currentNoiseLevel = noiseLevelInDb;
-                        mNoiseManager.stopRecording();
-                    }
-                });
+                            // Log the noise level for testing
+                            Log.d("NoiseLevel", "Current noise level: " + noiseLevelInDb + " dB");
+                            currentNoiseLevel = noiseLevelInDb;
+                            mNoiseManager.stopRecording();
+                        }
+                    });
 
-                AcousticNoisePainter.paintSquareByAcousticNoise(mapView, square,
-                        currentNoiseLevel, mode, squareSizeMeters);
-                    Log.d("input", "currentNoiseLevel. "+ currentNoiseLevel);
+                    AcousticNoisePainter.paintSquareByAcousticNoise(mapView, square,
+                            currentNoiseLevel, mode, squareSizeMeters);
+                    Log.d("input", "currentNoiseLevel. " + currentNoiseLevel);
                 }
+            } else {
+                Log.d("10M", "10M "+notificationsManager.is10MNotificationsEnabled());
+                Log.d("100M", "100M "+notificationsManager.is100MNotificationsEnabled());
+                Log.d("1KM", "1KM "+notificationsManager.is1KMNotificationsEnabled());
+                Log.d("switch", "switch "+notificationsManager.areNotificationsEnabled());
+                if (squareSizeMeters == 10.0 && notificationsManager.is10MNotificationsEnabled()
+                        && notificationsManager.areNotificationsEnabled()) {
+                    NotificationsManager.show10MNotification(mapView.getContext());
+                }
+                if (squareSizeMeters == 100.0 && notificationsManager.is100MNotificationsEnabled()
+                        && notificationsManager.areNotificationsEnabled())
+                    NotificationsManager.show100MNotification(mapView.getContext());
+                if (squareSizeMeters == 1000.0 && notificationsManager.is1KMNotificationsEnabled()
+                        && notificationsManager.areNotificationsEnabled())
+                    NotificationsManager.show1KMNotification(mapView.getContext());
+            }
         }
     }
 

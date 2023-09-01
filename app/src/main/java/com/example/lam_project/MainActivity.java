@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat;
 
 import com.example.lam_project.managers.ButtonManager;
 import com.example.lam_project.managers.DatabaseManager;
+import com.example.lam_project.managers.NotificationsManager;
 import com.example.lam_project.managers.SettingsManager;
 import com.example.lam_project.managers.SignalStrengthManager;
 import com.example.lam_project.model.Square;
@@ -186,6 +187,7 @@ public class MainActivity extends Activity {
         manualScanButton.setOnClickListener(this::manualScan);
         map.setClickable(false);
         map.setMultiTouchControls(false);
+        NotificationsManager.createNotificationChannel(this);
         GridCreator.expiredSquares(map, buttonManager.getCurrentMode(), buttonManager.getCurrentSquareSizeMeters());
 
         //startLocationUpdates();
@@ -225,7 +227,7 @@ public class MainActivity extends Activity {
             mapController.setZoom(21.0);
             ButtonManager buttonManager = new ButtonManager(map.getContext());
             GridCreator.createSquare(map, latitude, longitude,
-                    buttonManager.getCurrentSquareSizeMeters(), buttonManager.getCurrentMode());
+                    buttonManager.getCurrentSquareSizeMeters(), buttonManager.getCurrentMode(), true);
 
             // Do something with the updated coordinates
             // For example, display them on the UI or use them in your logic
@@ -365,7 +367,6 @@ public class MainActivity extends Activity {
                 // get coordinates from gps' location object (android documentation)
                 double latitude = location.getLatitude();
                 double longitude = location.getLongitude();
-                if (settingsManager.isAutoScanEnabled()) {
 
                     IMapController mapController = map.getController();
                     // Create a GeoPoint using the latitude and longitude variables
@@ -375,8 +376,8 @@ public class MainActivity extends Activity {
                     // Set the desired fixed zoom level (e.g., 12.0)
                     mapController.setZoom(21.0);
                     GridCreator.createSquare(map, latitude, longitude,
-                            buttonManager.getCurrentSquareSizeMeters(), buttonManager.getCurrentMode());
-                }
+                            buttonManager.getCurrentSquareSizeMeters(), buttonManager.getCurrentMode(), false);
+
                 /*
                 // Create a GeoPoint using the latitude and longitude variables
                 GeoPoint startPoint = new GeoPoint(latitude, longitude);

@@ -61,11 +61,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/minutesLabel" />
 
+    <TextView
+        android:id="@+id/notification_settings_button"
+        android:layout_width="345dp"
+        android:layout_height="46dp"
+        android:layout_marginTop="68dp"
+        android:background="#BDBDB7"
+        android:text="Notification Settings"
+        android:textAlignment="center"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColor="#000000"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/measurementsLabel" />
+
     <Button
         android:id="@+id/dumpDatabaseButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="256dp"
+        android:layout_marginStart="244dp"
         android:layout_marginTop="116dp"
         android:text="Dump Database"
         app:layout_constraintStart_toStartOf="parent"
@@ -76,11 +90,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="116dp"
-        android:layout_marginEnd="256dp"
+        android:layout_marginEnd="268dp"
         android:text="Delete Data"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintRight_toLeftOf="@+id/dumpDatabaseButton"
         app:layout_constraintTop_toBottomOf="@+id/measurementsLabel" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
 

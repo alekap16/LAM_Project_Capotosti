@@ -2,6 +2,7 @@ package com.example.lam_project;
 
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.SeekBar;
@@ -19,8 +20,6 @@ public class SettingsActivity extends Activity {
     private TextView minutesLabel;
     private Button dumpDatabaseButton;
     private Button deleteDataButton;
-
-    private boolean isNotificationEnabled;
     private long selectedMinutes;
     private int selectedMeasurements;
     private SettingsManager settingsManager;
@@ -48,6 +47,13 @@ public class SettingsActivity extends Activity {
         measurementsLabel.setText("Number of measurements: " + settingsManager.getSelectedMeasurements());
 
         autoScanSwitch.setChecked(settingsManager.isAutoScanEnabled());
+
+        TextView notificationSettingsButton = findViewById(R.id.notification_settings_button);
+
+        notificationSettingsButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, NotificationSettingsActivity.class);
+            startActivity(intent);
+        });
 
         autoScanSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             settingsManager.setAutoScanEnabled(isChecked);

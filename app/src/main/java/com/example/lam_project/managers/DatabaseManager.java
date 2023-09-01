@@ -3,17 +3,13 @@ package com.example.lam_project.managers;
 import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.util.Log;
 
-import com.example.lam_project.AcousticNoisePainter;
-import com.example.lam_project.LTESignalPainter;
-import com.example.lam_project.UpdatedSquarePainter;
-import com.example.lam_project.WiFiSignalPainter;
+import com.example.lam_project.graphics.UpdatedSquarePainter;
 import com.example.lam_project.model.Square;
 
 import org.osmdroid.views.MapView;
@@ -107,7 +103,22 @@ public class DatabaseManager extends SQLiteOpenHelper {
             db.close();
         }
     }
+    public static List<Square> retrieveSquares(MapView map) {
+        DatabaseManager databaseManager = new DatabaseManager(map.getContext());
+        ButtonManager buttonManager = new ButtonManager(map.getContext());
 
+        List<Square> squares = databaseManager.getAllSquares();
+        List<Square> filteredSquares = new ArrayList<>();
+        for (Square square : squares) {
+
+            if (square.getMode() == buttonManager.getCurrentMode() &&
+                    square.getSquareSize() == buttonManager.getCurrentSquareSizeMeters() ) {
+                filteredSquares.add(square);
+            }
+        }
+        databaseManager.close();
+        return filteredSquares;
+    }
     public static void saveSquareToDatabase(Polygon square, int color, int mode, MapView map,
                                             double squareSizeMeters, double signalValue) {
         // Get the latitude and longitude of the square
@@ -124,7 +135,6 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
         long currentTimestamp = System.currentTimeMillis(); // Convert to seconds
         squareObject.setTimestamp(currentTimestamp);
-        Log.d("TIMESTAMP SQUARE", "Timestamp: "+squareObject.getTimestamp());
         // Get a reference to the database helper
         Context context = map.getContext(); // Make sure you have access to the context where the map is displayed
         DatabaseManager dbHelper = new DatabaseManager(context);
@@ -137,13 +147,12 @@ public class DatabaseManager extends SQLiteOpenHelper {
         values.put(dbHelper.COLUMN_LATITUDE_END, squareObject.getLatitudeEnd());
         values.put(dbHelper.COLUMN_LONGITUDE_END, squareObject.getLongitudeEnd());
         values.put(dbHelper.COLUMN_COLOR, squareObject.getColor());
-        values.put(dbHelper.COLUMN_TYPE, squareObject.getType());
+        values.put(dbHelper.COLUMN_TYPE, squareObject.getMode());
         values.put(dbHelper.COLUMN_SIZE, squareObject.getSquareSize());
         values.put(dbHelper.COLUMN_TIMESTAMP, squareObject.getTimestamp());
         values.put(dbHelper.COLUMN_SIGNAL_VALUE, squareObject.getSignalValue());
         values.put(dbHelper.COLUMN_COUNT, squareObject.getCount());
         id = db.insert(dbHelper.TABLE_NAME, null, values);
-        Log.d("ID INSERT", "ID: "+id);
         // Set the ID of the square object after insertion, maybe removing this later?
         squareObject.setId(id);
         db.close();
@@ -153,16 +162,15 @@ public class DatabaseManager extends SQLiteOpenHelper {
     public static void updateSquare(Square square, double signalValue, MapView map) {
         Square updatedSquare = new Square(square.getId(), square.getLatitudeStart(), square.getLongitudeStart(),
                 square.getLatitudeEnd(), square.getLongitudeEnd(), square.getColor(),
-                square.getType(), square.getSquareSize(), square.getTimestamp(), square.getSignalValue(),
+                square.getMode(), square.getSquareSize(), square.getTimestamp(), square.getSignalValue(),
                 square.getCount());
         SettingsManager settingsManager = new SettingsManager(map.getContext());
         if(updatedSquare.getCount() < settingsManager.getSelectedMeasurements()){
                     updatedSquare.setId(square.getId());
         updatedSquare.setSignalValue((updatedSquare.getSignalValue()+signalValue));
-            int fillColor = UpdatedSquarePainter.paintSquare(updatedSquare.getType(),
+            int fillColor = UpdatedSquarePainter.paintSquare(updatedSquare.getMode(),
                     updatedSquare.getSignalValue()/updatedSquare.getCount());
         updatedSquare.setColor(fillColor);
-        Log.d("ELIMINA QUESTO","ID: "+updatedSquare.getId());
 
             deleteSquare(updatedSquare.getId(),map);
             long currentTimestamp = System.currentTimeMillis(); // Convert to seconds
@@ -179,13 +187,12 @@ public class DatabaseManager extends SQLiteOpenHelper {
         values.put(COLUMN_LATITUDE_END,updatedSquare.getLatitudeEnd());
         values.put(COLUMN_LONGITUDE_END,updatedSquare.getLongitudeEnd());
         values.put(COLUMN_COLOR,updatedSquare.getColor());
-        values.put(COLUMN_TYPE,updatedSquare.getType());
+        values.put(COLUMN_TYPE,updatedSquare.getMode());
         values.put(COLUMN_SIZE,updatedSquare.getSquareSize());
         values.put(COLUMN_TIMESTAMP,updatedSquare.getTimestamp());
         values.put(COLUMN_SIGNAL_VALUE,updatedSquare.getSignalValue());
         values.put(COLUMN_COUNT,updatedSquare.getCount()+1);
         db.insert(TABLE_NAME,null,values);
-        Log.d("AGGIUNGI","CON ID: "+updatedSquare.getId());
         dbHelper.close();
         db.close();
         }
@@ -198,7 +205,6 @@ public class DatabaseManager extends SQLiteOpenHelper {
         // Insert the square into the database
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         db.delete(TABLE_NAME,  "_id = ?", new String[]{String.valueOf(id)});
-        Log.d("DELETE", "DELETE WITH ID: "+id);
         dbHelper.close();
         db.close();
     }
@@ -234,7 +240,8 @@ public class DatabaseManager extends SQLiteOpenHelper {
         try {
             File exportDir = new File(Environment.getExternalStoragePublicDirectory
                     (Environment.DIRECTORY_DOWNLOADS), "MyDatabaseExports");
-            Log.d("DIRECTORY PATH", "DIR: "+ exportDir);
+            //If you need to find the directory uncomment this
+//            Log.d("DIRECTORY PATH", "DIR: "+ exportDir);
             if (!exportDir.exists()) {
                 exportDir.mkdirs();
             }

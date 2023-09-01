@@ -48,7 +48,6 @@ public class AcousticNoiseManager {
         );
 
         if (mAudioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
-            // Handle initialization error
             return;
         }
 

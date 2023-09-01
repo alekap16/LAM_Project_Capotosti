@@ -1,4 +1,4 @@
-package com.example.lam_project;
+package com.example.lam_project.activities;
 
 
 import android.app.Activity;
@@ -9,6 +9,7 @@ import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.example.lam_project.R;
 import com.example.lam_project.managers.DatabaseManager;
 import com.example.lam_project.managers.SettingsManager;
 
@@ -98,12 +99,6 @@ public class SettingsActivity extends Activity {
 
         deleteDataButton.setOnClickListener(v -> databaseManager.showEraseConfirmationDialog
                 (SettingsActivity.this));
-    }
-
-
-    // I need this for later usages
-    private long convertMinutesToMilliseconds(long minutes) {
-        return minutes * 60 * 1000; // Convert minutes to milliseconds
     }
 }
 

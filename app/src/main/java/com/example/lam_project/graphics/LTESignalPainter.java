@@ -1,36 +1,29 @@
-package com.example.lam_project;
+package com.example.lam_project.graphics;
 
 import static com.example.lam_project.managers.DatabaseManager.saveSquareToDatabase;
 
-import android.content.ContentValues;
-import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.util.Log;
 
-import com.example.lam_project.managers.DatabaseManager;
-import com.example.lam_project.model.Square;
+import com.example.lam_project.managers.ButtonManager;
 
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Polygon;
 
 public class LTESignalPainter {
 
+    private static final int MODE_LTE = 1;
     // Signal strength levels
-    private static final double POOR_SIGNAL_STRENGTH = 1.0;
+    private static final double POOR_SIGNAL_STRENGTH = 2.0;
     private static final double AVERAGE_SIGNAL_STRENGTH = 3.0;
-
-
     private static final int ALPHA_TRANSPARENT = 100; // Adjust this value to control transparency
-
-
-
     // Method to paint the square based on the LTE signal strength
     public static void paintSquareByLTESignalStrength(MapView map, Polygon square,
-                                                      double signalStrength, int mode,
-                                                      double squareSizeMeters) {
+                                                      double signalStrength) {
         if (map == null || square == null)
             return;
+
+        ButtonManager buttonManager = new ButtonManager(map.getContext());
 
         int fillColor;
 
@@ -48,12 +41,12 @@ public class LTESignalPainter {
         square.setStrokeWidth(2f);
         square.setFillColor(fillColor);
 
-        // Create a custom diagonal pattern for the square
 
-        saveSquareToDatabase(square, fillColor, mode, map, squareSizeMeters, signalStrength);
+        saveSquareToDatabase(square, fillColor, MODE_LTE, map,
+                buttonManager.getCurrentSquareSizeMeters(), signalStrength);
         map.getOverlayManager().add(square);
         map.invalidate();
-        // Save the square into the database
+
     }
 
 }

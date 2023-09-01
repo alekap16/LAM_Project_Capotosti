@@ -1,4 +1,4 @@
-package com.example.lam_project;
+package com.example.lam_project.graphics;
 
 import android.graphics.Color;
 

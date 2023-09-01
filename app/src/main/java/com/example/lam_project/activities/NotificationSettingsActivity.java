@@ -1,11 +1,12 @@
-package com.example.lam_project;
+package com.example.lam_project.activities;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.CheckBox;
 import android.widget.Switch;
+
+import com.example.lam_project.R;
 
 public class NotificationSettingsActivity extends SettingsActivity {
     private Switch notificationSwitch;

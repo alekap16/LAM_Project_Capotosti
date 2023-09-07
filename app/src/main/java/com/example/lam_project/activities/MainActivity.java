@@ -10,6 +10,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
@@ -64,6 +65,10 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Add this for tracking down not closed listeners
+//        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder(StrictMode.getVmPolicy())
+//                .detectLeakedClosableObjects()
+//                .build());
 
         Caching();
         // Check if the app has location permission

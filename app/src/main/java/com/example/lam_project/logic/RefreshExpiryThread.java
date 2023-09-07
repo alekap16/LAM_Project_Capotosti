@@ -50,6 +50,7 @@ public class RefreshExpiryThread {
                 for (Square square : printNonExpiredSquares) {
                     SquareCreator.createExistingSquares(map, square);
                 }
+                databaseManager2.close();
                 // Define MILLISECONDS_EXPIRY_REFRESH in milliseconds
                 handler.postDelayed(this, MILLISECONDS_EXPIRY_REFRESH); }
         };

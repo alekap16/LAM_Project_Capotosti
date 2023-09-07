@@ -96,6 +96,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         onCreate(db);
+        db.close();
     }
 
     public void close() {
@@ -155,8 +156,8 @@ public class DatabaseManager extends SQLiteOpenHelper {
         id = db.insert(dbHelper.TABLE_NAME, null, values);
         // Set the ID of the square object after insertion, maybe removing this later?
         squareObject.setId(id);
-        db.close();
         dbHelper.close();
+        db.close();
     }
 
     public static void updateSquare(Square square, double signalValue, MapView map) {

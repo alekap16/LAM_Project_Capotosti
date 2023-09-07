@@ -3,11 +3,11 @@ package com.example.lam_project.graphics;
 import android.graphics.Color;
 
 public class UpdatedSquarePainter {
-    private static final double POOR_SIGNAL_STRENGTH_LTE = 1.0;
+    private static final double POOR_SIGNAL_STRENGTH_LTE = 2.0;
     private static final double AVERAGE_SIGNAL_STRENGTH_LTE = 3.0;
     private static final double POOR_SIGNAL_STRENGTH_WIFI = 1.0;
     private static final double AVERAGE_SIGNAL_STRENGTH_WIFI = 2.0;
-    private static final double VERY_LOUD = -40.0;
+    private static final double VERY_LOUD = 10.0;
     private static final double AVERAGE_NOISE = -20.0;
     private static final int ALPHA_TRANSPARENT = 100;
     public static int paintSquare(int mode, double signalValue){
